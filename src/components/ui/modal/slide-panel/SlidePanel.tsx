@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Overlay, PanelContainer, PanelHeader, HeaderActionsContainer, PanelContent } from './SlidePanel.styles';
 import type { SlidePanelProps } from './types';
 
@@ -19,18 +19,6 @@ export const SlidePanel: React.FC<SlidePanelProps> = ({
   const scrollPositionRef = useRef(0);
 
   /**
-   * 패널 외부를 클릭했을 때 패널을 닫습니다.
-   */
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
-  /**
    * 패널의 열림/닫힘 상태에 따라 body 스크롤을 제어합니다.
    * 스크롤 위치를 저장하고 복원하며, 레이아웃 점프를 방지합니다.
    */
@@ -47,9 +35,7 @@ export const SlidePanel: React.FC<SlidePanelProps> = ({
       if (scrollbarWidth > 0) {
         document.body.style.paddingRight = `${scrollbarWidth}px`;
       }
-      document.addEventListener('mousedown', handleClickOutside);
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
@@ -59,7 +45,6 @@ export const SlidePanel: React.FC<SlidePanelProps> = ({
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       if (document.body.style.overflow === 'hidden' && document.body.style.position === 'fixed') {
         document.body.style.overflow = '';
         document.body.style.position = '';
@@ -69,7 +54,7 @@ export const SlidePanel: React.FC<SlidePanelProps> = ({
         window.scrollTo(0, scrollPositionRef.current);
       }
     };
-  }, [isOpen, handleClickOutside]);
+  }, [isOpen]);
 
   return (
     <>

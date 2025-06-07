@@ -1,12 +1,14 @@
 import type React from 'react';
 
 export interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
+  width?: string;
   label?: string;
   icon?: React.ReactNode;
-  initialValue?: string | number | readonly string[];
+  required?: boolean;
+  value: string;
+  errorText?: string;
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
-  width?: string;
 }
 
 export interface FieldContainerProps {
@@ -16,6 +18,7 @@ export interface FieldContainerProps {
 export interface InputWrapperProps extends React.ComponentPropsWithoutRef<'div'> {
   $hasIcon: boolean;
   $isFocused: boolean;
+  $isError: boolean;
   $isDisabled: boolean;
   $isReadOnly: boolean;
 }

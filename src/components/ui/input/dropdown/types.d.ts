@@ -5,14 +5,16 @@ export interface DropdownOption {
 
 export interface DropdownProps {
   id?: string;
+  width?: string;
   label?: string;
   options: DropdownOption[];
-  initialValue?: string | number;
+  value?: string | number;
+  errorText?: string;
   placeholder?: string;
-  onSelect?: (value: string | number) => void;
-  width?: string;
+  required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  onSelect?: (value: string | number) => void;
 }
 
 export interface FieldContainerProps {
@@ -22,6 +24,7 @@ export interface FieldContainerProps {
 export interface StyledDropdownContainerProps {
   $width?: string;
   $isDisabledOrReadOnly: boolean;
+  $isError: boolean;
   $isOpen: boolean;
 }
 

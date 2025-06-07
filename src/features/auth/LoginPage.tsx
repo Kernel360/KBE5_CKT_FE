@@ -60,6 +60,7 @@ const LoginPage = () => {
           id="email"
           label="이메일"
           placeholder="이메일 주소 입력"
+          value={email}
           onChange={setEmail}
           onEnter={handleLogin}
         />
@@ -68,6 +69,7 @@ const LoginPage = () => {
           type="password"
           id="password"
           label="비밀번호"
+          value={password}
           placeholder="••••••••"
           onChange={setPassword}
           onEnter={handleLogin}

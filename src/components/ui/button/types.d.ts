@@ -1,4 +1,4 @@
-export type ButtonType = 'primary' | 'gray' | 'red';
+export type ButtonType = 'primary' | 'basic' | 'gray' | 'red';
 export type IconPosition = 'left' | 'right';
 
 export type StyledBasicButtonProps = Omit<BasicButtonProps, 'children' | 'buttonType'> & {

@@ -31,14 +31,6 @@ export const StyledBasicButton = styled.button<StyledBasicButtonProps>`
   /* 버튼 타입에 따른 컬러 스타일 */
   ${props => {
     switch (props.$buttonType) {
-      case 'primary':
-        return css`
-          background: var(--color-primary);
-          color: var(--color-white);
-          &:hover {
-            background: var(--color-primaryDark);
-          }
-        `;
       case 'gray':
         return css`
           background: var(--color-gray400);
@@ -49,12 +41,24 @@ export const StyledBasicButton = styled.button<StyledBasicButtonProps>`
         `;
       case 'red':
         return css`
-          background: var(--color-redLight);
-          color: var(--color-red);
+          background: var(--color-red);
+          color: var(--color-white);
           &:hover {
-            background: var(--color-redLightDark);
+            background: var(--color-redDark);
           }
         `;
+      case 'basic':
+        return css`
+          background: var(--color-white);
+          color: var(--color-gray700);
+          outline: 1px var(--color-gray400) solid;
+          outline-offset: -1px;
+          &:hover {
+            background: var(--color-gray300);
+            outline: 1px solid var(--color-gray400);
+          }
+        `;
+      case 'primary':
       default:
         return css`
           background: var(--color-primary);
@@ -128,14 +132,6 @@ export const StyledActionButton = styled.button<StyledActionButtonProps>`
           color: var(--color-gray600);
           &:hover {
             background: var(--color-gray300);
-          }
-        `;
-      case 'red':
-        return css`
-          background: var(--color-redLight);
-          color: var(--color-red);
-          &:hover {
-            background: var(--color-redLightDark);
           }
         `;
       default:

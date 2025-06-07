@@ -8,7 +8,7 @@ export const Overlay = styled.div`
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 100;
   transition: opacity 0.3s ease-in-out;
 `;
 
@@ -19,7 +19,7 @@ export const PanelContainer = styled.div<PanelContainerProps>`
   height: 100vh;
   background-color: var(--color-white);
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-  z-index: 1001;
+  z-index: 101;
   width: ${({ $width }) => $width};
   display: flex;
   flex-direction: column;
@@ -109,46 +109,6 @@ export const PanelRowContainer = styled.div`
   gap: 8px;
 `;
 
-// --- 3. 텍스트 및 라벨 스타일 ---
-export const PanelTitle = styled.h2`
-  display: block;
-  margin: 0;
-  padding: 0;
-  color: var(--color-gray800);
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 21.6px;
-  word-wrap: break-word;
-`;
-
-export const PanelSubTitle = styled.h2`
-  display: block;
-  margin: 0;
-  padding: 0;
-  color: var(--color-gray800);
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 19.2px;
-  word-wrap: break-word;
-`;
-
-export const PanelLabelText = styled.span`
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 16.8px;
-  word-wrap: break-word;
-`;
-
-export const PanelValueText = styled.span`
-  color: #334155;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 16.8px;
-  word-wrap: break-word;
-`;
-
-// --- 4. 라벨 및 값(Input/Text) 컨테이너 스타일 ---
 export const PanelLabelContainer = styled.div`
   width: 100px;
   flex-shrink: 0;
@@ -165,31 +125,7 @@ export const PanelValueContainer = styled.div`
   align-items: flex-start;
 `;
 
-// --- 5. 입력 필드 (Input/Textarea) 스타일 ---
-export const StyledInput = styled.input`
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.5;
-  box-sizing: border-box;
-  min-height: 40px;
-
-  &:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-  }
-
-  &[as='textarea'] {
-    resize: vertical;
-    min-height: 80px;
-  }
-`;
-
-// --- 6. 애니메이션 컨테이너 스타일 ---
-export const AnimatedContent = styled.div<PanelAnimatedContentProps>`
+export const AnimatedSection = styled.div<PanelAnimatedContentProps>`
   max-height: ${({ $isVisible, $maxHeight }) => ($isVisible ? $maxHeight : '0')};
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
   overflow: hidden;

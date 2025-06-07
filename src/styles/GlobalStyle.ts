@@ -64,6 +64,45 @@ const GlobalStyle = createGlobalStyle`
     *::after {
       box-sizing: inherit;
     }
+
+    /* Toast Popup */
+    .Toastify__toast {
+      width: 560px;
+      font-size: 16px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 성공 메시지 색상 변경 */
+    .Toastify__toast--success {
+      background-color: var(--color-primary);
+      color: white;
+      --toastify-icon-color-success: white;
+    }
+
+    /* 에러 메시지 색상 변경 */
+    .Toastify__toast--error {
+      background-color: var(--color-red);
+      color: white;
+      --toastify-icon-color-error: white;
+    }
+
+    /* 정보 메시지 색상 변경 */
+    .Toastify__toast--info {
+      background-color: var(--color-black);
+      color: white;
+      --toastify-icon-color-info: white;
+    }
+
+    /* 닫기 버튼 색상 변경 (기본 X 버튼) */
+    .Toastify__close-button {
+      color: white;
+      opacity: 1;
+    }
+    .Toastify__close-button:hover {
+      opacity: 0.8;
+    }
   `}
 `;
 
