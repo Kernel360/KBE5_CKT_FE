@@ -19,6 +19,7 @@ import DrivingLogPage from '@/features/monitoring/DrivingLogPage';
 import DrivingHistoryPage from '@/features/monitoring/DrivingHistoryPage';
 import CustomerListPage from '@/features/customer/CustomerListPage';
 import VehicleListPage from '@/features/vehicle/VehicleListPage';
+import RentalListPage from '@/features/rental/RentalListPage';
 
 const StyledThemeProviderWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentTheme } = useTheme();
@@ -57,6 +58,10 @@ function App() {
                 <Route path="/customer">
                   <Route index element={<CustomerListPage />} />
                   <Route path="list" element={<CustomerListPage />} />
+                </Route>
+
+                <Route path="/rental">
+                  <Route index element={<RentalListPage />} />
                 </Route>
               </Route>
             </Routes>
