@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import PlusIcon from '@/assets/icons/ic-plus.svg?react';
 import SearchIcon from '@/assets/icons/ic-search.svg?react';
@@ -20,6 +20,7 @@ import { RENTAL_TABLE_HEADERS, STATUS_OPTIONS, type RentalSummary } from './type
 import { useRentalList } from './hooks/useRentalList';
 import { BasicTable } from '@/components/ui/table/table/BasicTable';
 import { Pagination } from '@/components/ui/table/pagination/Pagination';
+import { RentalRegisterPopup } from './RentalRegisterPopup';
 
 const RentalListPage: React.FC = () => {
   // -----------------------------------------------------------------------
@@ -37,6 +38,9 @@ const RentalListPage: React.FC = () => {
     setCurrentPage, // 현재 페이지를 업데이트하는 함수
     refetch, // 데이터 다시 불러오는 함수
   } = useRentalList();
+
+  // 예약 등록 팝업 제어
+  const [isRegisterPopupOpen, setIsRegisterPopupOpen] = useState(false);
 
   // -----------------------------------------------------------------------
   // 핸들러 함수들
@@ -98,9 +102,26 @@ const RentalListPage: React.FC = () => {
     console.log('선택된 row > ', rowData);
   }, []);
 
+  /**
+   * 예약 등록 팝업 열기 핸들러.
+   */
   const handleRegister = useCallback(() => {
-    console.log('등록');
+    setIsRegisterPopupOpen(true);
   }, []);
+
+  /**
+   * 예약 등록 팝업 닫기 핸들러. 등록 성공 시 차량 목록을 새로고침합니다.
+   * @param success 등록 작업 성공 여부
+   */
+  const handleRegisterPopupClose = useCallback(
+    (success?: boolean) => {
+      setIsRegisterPopupOpen(false);
+      if (success) {
+        refetch();
+      }
+    },
+    [refetch]
+  );
 
   // -----------------------------------------------------------------------
   // 렌더링
@@ -181,6 +202,9 @@ const RentalListPage: React.FC = () => {
           />
         )}
       </TableContainer>
+
+      {/* 예약 등록 팝업 컴포넌트 */}
+      <RentalRegisterPopup isOpen={isRegisterPopupOpen} onClose={handleRegisterPopupClose} />
     </DashboardContainer>
   );
 };

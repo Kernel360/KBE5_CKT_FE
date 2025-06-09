@@ -3,6 +3,42 @@
 import type { DropdownOption } from '@/components/ui/input/dropdown/types';
 import type { TableHeader } from '@/components/ui/table/table/types';
 
+// --- 예약 등록 폼 관련 타입 ---
+
+/**
+ * 예약 등록 폼의 데이터 구조를 정의합니다.
+ */
+export interface RentalFormData {
+  vehicleId: number | null;
+  customerId: number | null;
+  pickupAt: Date | null;
+  returnAt: Date | null;
+  memo: string;
+}
+
+/**
+ * 예약 등록 폼의 유효성 검사 에러 메시지 구조를 정의합니다.
+ */
+export interface RentalFormErrors {
+  vehicleId?: string;
+  customerId?: string;
+  pickupAt?: string;
+  modelName?: string;
+  returnAt?: string;
+  memo?: string;
+}
+
+/**
+ * `useRentalRegister` 훅이 반환하는 객체의 타입을 정의합니다.
+ */
+export interface UseRentalRegisterReturn {
+  formData: RentalFormData;
+  errors: RentalFormErrors;
+  handleInputChange: (id: keyof RentalFormData, value: string) => void;
+  handleSubmit: () => Promise<boolean>;
+  resetForm: () => void;
+}
+
 // --- 테이블 헤더 정의 ---
 /**
  * 예약 목록 테이블의 헤더 구성을 정의합니다.
