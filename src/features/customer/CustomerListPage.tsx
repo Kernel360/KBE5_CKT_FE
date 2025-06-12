@@ -53,7 +53,7 @@ const headers = [
 ];
 
 const RENTAL_STATUS_OPTIONS = [
-  { label: '전체', value: 'all' },
+  { label: '전체', value: '' },
   { label: 'ACTIVE', value: 'ACTIVE' },
   { label: 'INACTIVE', value: 'INACTIVE' },
 ];
@@ -66,7 +66,7 @@ const CustomerManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('');
   const [keyword, setKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -80,7 +80,7 @@ const CustomerManagementPage: React.FC = () => {
         params: {
           page: page - 1, // 0-based page index
           size: ITEMS_PER_PAGE,
-          status: status === 'all' ? undefined : status,
+          status: status || undefined,
           keyword: keyword || undefined,
         },
       });
@@ -91,7 +91,7 @@ const CustomerManagementPage: React.FC = () => {
 
       const data = response.data.data;
       setCustomers(data.list);
-      setTotalPages(data.totalPages); // 서버가 totalPages를 응답한다고 가정
+      setTotalPages(data.totalPages);
 
     } catch (err) {
       setError((err as Error).message);
