@@ -20,6 +20,7 @@ import PlusIcon from '@/assets/icons/ic-plus.svg?react';
 import SearchIcon from '@/assets/icons/ic-search.svg?react';
 import api from '@/libs/axios';
 import { CODE_SUCCESS } from '@/utils/response';
+import { CustomerRegisterPopup } from './CustomerRegisterPopup';
 
 interface Customer {
   id: number;
@@ -65,6 +66,7 @@ const CustomerManagementPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRegisterPopupOpen, setIsRegisterPopupOpen] = useState(false);
 
   const [filterStatus, setFilterStatus] = useState('all');
   const [keyword, setKeyword] = useState('');
@@ -125,11 +127,20 @@ const CustomerManagementPage: React.FC = () => {
     setCurrentPage(page);
   }, []);
 
+  const handleRegisterPopupClose = useCallback((success?: boolean) => {
+    setIsRegisterPopupOpen(false);
+    if (success) {
+      fetchCustomers(currentPage, filterStatus, keyword);
+    }
+  }, [currentPage, filterStatus, keyword, fetchCustomers]);
+
   return (
     <DashboardContainer>
       <TitleContainer>
         <Text type="heading">사용자 관리</Text>
-        <IconButton icon={<PlusIcon />}>사용자 추가</IconButton>
+        <IconButton icon={<PlusIcon />} onClick={() => setIsRegisterPopupOpen(true)}>
+          사용자 추가
+        </IconButton>
       </TitleContainer>
 
       <FilterContainer>
@@ -185,6 +196,12 @@ const CustomerManagementPage: React.FC = () => {
           </>
         )}
       </TableContainer>
+
+      <CustomerRegisterPopup
+        isOpen={isRegisterPopupOpen}
+        onClose={handleRegisterPopupClose}
+        onSuccess={() => fetchCustomers(currentPage, filterStatus, keyword)}
+      />
     </DashboardContainer>
   );
 };
