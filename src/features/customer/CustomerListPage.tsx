@@ -36,26 +36,33 @@ interface Customer {
 }
 
 const headers = [
-  { label: '번호', key: 'id', width: '8%', align: 'center' },
+  { label: '번호', key: 'id', width: '5%', align: 'center' },
   { label: '이름', key: 'customerName', width: '8%', align: 'center' },
   { label: '생년월일', key: 'birthday', width: '8%', align: 'center' },
-  { label: '연락처', key: 'phoneNumber', width: '15%', align: 'center' },
-  { label: '운전면허번호', key: 'licenseNumber', width: '8%', align: 'center' },
-  { label: '주소', key: 'address', width: '15%', align: 'center' },
-  { label: '상태', key: 'status',type: 'badge',
+  { label: '연락처', key: 'phoneNumber', width: '10%', align: 'center' },
+  { label: '운전면허번호', key: 'licenseNumber', width: '12%', align: 'center' },
+  { 
+    label: '주소', 
+    key: 'address', 
+    width: '30%', 
+    align: 'center',
+    displayKey: 'fullAddress'
+  },
+  { label: '상태', key: 'status', type: 'badge',
     displayKey: 'statusName',
     valueToBadgeColorMap: {
       ACTIVE: 'green',
       WITHDRAWN: 'red',
       DORMANT: 'gray',
     }, width: '8%', align: 'center' },
-  { label: '비고', key: 'memo', width: '30%', align: 'center' },
+  { label: '비고', key: 'memo', width: '20%', align: 'center' },
 ];
 
 const RENTAL_STATUS_OPTIONS = [
   { label: '전체', value: '' },
-  { label: 'ACTIVE', value: 'ACTIVE' },
-  { label: 'INACTIVE', value: 'INACTIVE' },
+  { label: '회원', value: 'ACTIVE' },
+  { label: '탈퇴', value: 'WITHDRAWN' },
+  { label: '휴면', value: 'DORMANT' }
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -78,7 +85,7 @@ const CustomerManagementPage: React.FC = () => {
     try {
       const response = await api.get('/api/v1/customers', {
         params: {
-          page: page - 1, // 0-based page index
+          page: page - 1,
           size: ITEMS_PER_PAGE,
           status: status || undefined,
           keyword: keyword || undefined,
@@ -90,10 +97,17 @@ const CustomerManagementPage: React.FC = () => {
       }
 
       const data = response.data.data;
-      setCustomers(data.list);
+      // 주소와 상세주소를 합쳐서 fullAddress 필드 추가
+      const customersWithFullAddress = data.list.map((customer: any) => ({
+        ...customer,
+        fullAddress: `${customer.address || ''} ${customer.detailAddress || ''}`.trim()
+      }));
+
+      setCustomers(customersWithFullAddress);
       setTotalPages(data.totalPages);
 
     } catch (err) {
+      console.error('Error fetching customers:', err);
       setError((err as Error).message);
     } finally {
       setLoading(false);
