@@ -18,7 +18,9 @@ export interface CustomTheme {
   redDark: string;
   redLight: string;
   // Basic Color
+  blue: string;
   green: string;
+  yellow: string;
   orange: string;
   purple: string;
 }
@@ -39,7 +41,9 @@ const commonTheme = {
   red: '#EF4444',
   redDark: '#991B1B',
   redLight: '#FEE2E2',
+  blue: '#3563E9',
   green: '#10B981',
+  yellow: '#F59E0B',
   orange: '#EFA244',
   purple: '#6366F1',
 };
