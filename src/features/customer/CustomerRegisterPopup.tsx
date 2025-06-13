@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
+import styled from 'styled-components';
 
 import { Popup } from '@/components/ui/modal/popup/Popup';
 import { Text } from '@/components/ui/text/Text';
@@ -27,9 +28,14 @@ interface CustomerRegisterPopupProps {
 
 interface CustomerFormData {
   customer_name: string;
-  phone_number: string;
+  phone_number1: string;
+  phone_number2: string;
+  phone_number3: string;
   birthday: string;
-  license_number: string;
+  license_number1: string;
+  license_number2: string;
+  license_number3: string;
+  license_number4: string;
   zip_code: string;
   address: string;
   detailed_address: string;
@@ -50,14 +56,34 @@ interface CustomerFormErrors {
 
 const initialFormData: CustomerFormData = {
   customer_name: '',
-  phone_number: '',
+  phone_number1: '',
+  phone_number2: '',
+  phone_number3: '',
   birthday: '',
-  license_number: '',
+  license_number1: '',
+  license_number2: '',
+  license_number3: '',
+  license_number4: '',
   zip_code: '',
   address: '',
   detailed_address: '',
   memo: ''
 };
+
+const PhoneNumberInput = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  width: 100%;
+`;
+
+const LicenseNumberInput = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  width: 100%;
+  white-space: nowrap;
+`;
 
 // 다음 우편번호 서비스 타입 선언
 declare global {
@@ -109,9 +135,10 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
       newErrors.customer_name = '이름을 입력해주세요.';
     }
 
-    if (!formData.phone_number.trim()) {
+    const phoneNumber = `${formData.phone_number1}-${formData.phone_number2}-${formData.phone_number3}`;
+    if (!phoneNumber.replace(/-/g, '').trim()) {
       newErrors.phone_number = '연락처를 입력해주세요.';
-    } else if (!/^01[0-9]-\d{3,4}-\d{4}$/.test(formData.phone_number)) {
+    } else if (!/^01[0-9]-\d{3,4}-\d{4}$/.test(phoneNumber)) {
       newErrors.phone_number = '올바른 연락처 형식이 아닙니다. (예: 010-1234-5678)';
     }
 
@@ -121,9 +148,10 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
       newErrors.birthday = '올바른 생년월일 형식이 아닙니다. (예: 1990-01-01)';
     }
 
-    if (!formData.license_number.trim()) {
+    const licenseNumber = `${formData.license_number1}-${formData.license_number2}-${formData.license_number3}-${formData.license_number4}`;
+    if (!licenseNumber.replace(/-/g, '').trim()) {
       newErrors.license_number = '운전면허번호를 입력해주세요.';
-    } else if (!/^\d{2}-\d{2}-\d{6}-\d{2}$/.test(formData.license_number)) {
+    } else if (!/^\d{2}-\d{2}-\d{6}-\d{2}$/.test(licenseNumber)) {
       newErrors.license_number = '올바른 운전면허번호 형식이 아닙니다. (예: 12-34-567890-12)';
     }
 
@@ -140,6 +168,40 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
+
+  const handlePhoneNumberChange = useCallback((part: 1 | 2 | 3, value: string) => {
+    const maxLength = part === 1 ? 3 : part === 2 ? 4 : 4;
+    const numericValue = value.replace(/[^0-9]/g, '').slice(0, maxLength);
+    
+    setFormData(prev => ({
+      ...prev,
+      [`phone_number${part}`]: numericValue
+    }));
+
+    if (numericValue.length === maxLength) {
+      const nextInput = document.getElementById(`phone_number${part + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  }, []);
+
+  const handleLicenseNumberChange = useCallback((part: 1 | 2 | 3 | 4, value: string) => {
+    const maxLength = part === 1 || part === 2 ? 2 : part === 3 ? 6 : 2;
+    const numericValue = value.replace(/[^0-9]/g, '').slice(0, maxLength);
+    
+    setFormData(prev => ({
+      ...prev,
+      [`license_number${part}`]: numericValue
+    }));
+
+    if (numericValue.length === maxLength) {
+      const nextInput = document.getElementById(`license_number${part + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  }, []);
 
   const handleInputChange = useCallback((field: keyof CustomerFormData, value: string) => {
     setFormData(prev => ({
@@ -171,7 +233,6 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
     handleInputChange('zip_code', data.zonecode);
     handleInputChange('address', data.address);
     setIsPostcodeOpen(false);
-    // 상세주소 입력 필드로 포커스 이동
     const detailAddressInput = document.getElementById('detailed_address') as HTMLInputElement;
     if (detailAddressInput) {
       detailAddressInput.focus();
@@ -191,17 +252,15 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
 
       const requestData = {
         customerName: formData.customer_name,
-        phoneNumber: formData.phone_number,
+        phoneNumber: `${formData.phone_number1}-${formData.phone_number2}-${formData.phone_number3}`,
         birthday: formData.birthday,
-        licenseNumber: formData.license_number,
+        licenseNumber: `${formData.license_number1}-${formData.license_number2}-${formData.license_number3}-${formData.license_number4}`,
         zipCode: formData.zip_code,
         address: formData.address,
         detailAddress: formData.detailed_address,
         memo: formData.memo || '',
         status: 'ACTIVE'
       };
-
-      console.log('Sending request data:', requestData);
 
       const response = await axios.post(
         'http://localhost:8080/api/v1/customers',
@@ -212,8 +271,6 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
           },
         }
       );
-
-      console.log('API Response:', response);
 
       if (response.status === 200 || response.status === 201) {
         if (response.data.code === CODE_SUCCESS) {
@@ -227,12 +284,6 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
         toast.error('사용자 등록에 실패했습니다.');
       }
     } catch (error: any) {
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
@@ -293,19 +344,48 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
             />
           </FormFieldWrapper>
           <FormFieldWrapper>
-            <TextInput
-              type="tel"
-              id="phone_number"
-              label="연락처"
-              placeholder="예: 010-1234-5678"
-              onChange={value => handleInputChange('phone_number', value)}
-              value={formData.phone_number}
-              onEnter={handleRegister}
-              required={true}
-              maxLength={13}
-              errorText={errors.phone_number}
-              disabled={isSubmitting}
-            />
+            <PhoneNumberInput>
+              <TextInput
+                type="text"
+                id="phone_number1"
+                label="연락처"
+                placeholder="010"
+                onChange={value => handlePhoneNumberChange(1, value)}
+                value={formData.phone_number1}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={3}
+                errorText={errors.phone_number}
+                disabled={isSubmitting}
+                width="60px"
+              />
+              <Text type="body1" style={{ marginBottom: '8px' }}>-</Text>
+              <TextInput
+                type="text"
+                id="phone_number2"
+                placeholder="1234"
+                onChange={value => handlePhoneNumberChange(2, value)}
+                value={formData.phone_number2}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={4}
+                disabled={isSubmitting}
+                width="60px"
+              />
+              <Text type="body1" style={{ marginBottom: '8px' }}>-</Text>
+              <TextInput
+                type="text"
+                id="phone_number3"
+                placeholder="5678"
+                onChange={value => handlePhoneNumberChange(3, value)}
+                value={formData.phone_number3}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={4}
+                disabled={isSubmitting}
+                width="60px"
+              />
+            </PhoneNumberInput>
           </FormFieldWrapper>
           <FormFieldWrapper>
             <DatePickerWrapper>
@@ -349,19 +429,61 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
             </DatePickerWrapper>
           </FormFieldWrapper>
           <FormFieldWrapper>
-            <TextInput
-              type="text"
-              id="license_number"
-              label="운전면허번호"
-              placeholder="예: 12-34-567890-12"
-              onChange={value => handleInputChange('license_number', value)}
-              value={formData.license_number}
-              onEnter={handleRegister}
-              required={true}
-              maxLength={15}
-              errorText={errors.license_number}
-              disabled={isSubmitting}
-            />
+            <LicenseNumberInput>
+              <TextInput
+                type="text"
+                id="license_number1"
+                label="운전면허번호"
+                placeholder="12"
+                onChange={value => handleLicenseNumberChange(1, value)}
+                value={formData.license_number1}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={2}
+                errorText={errors.license_number}
+                disabled={isSubmitting}
+                width="35px"
+              />
+              <Text type="body1" style={{ marginBottom: '8px' }}>-</Text>
+              <TextInput
+                type="text"
+                id="license_number2"
+                placeholder="34"
+                onChange={value => handleLicenseNumberChange(2, value)}
+                value={formData.license_number2}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={2}
+                disabled={isSubmitting}
+                width="35px"
+              />
+              <Text type="body1" style={{ marginBottom: '8px' }}>-</Text>
+              <TextInput
+                type="text"
+                id="license_number3"
+                placeholder="567890"
+                onChange={value => handleLicenseNumberChange(3, value)}
+                value={formData.license_number3}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={6}
+                disabled={isSubmitting}
+                width="90px"
+              />
+              <Text type="body1" style={{ marginBottom: '8px' }}>-</Text>
+              <TextInput
+                type="text"
+                id="license_number4"
+                placeholder="12"
+                onChange={value => handleLicenseNumberChange(4, value)}
+                value={formData.license_number4}
+                onEnter={handleRegister}
+                required={true}
+                maxLength={2}
+                disabled={isSubmitting}
+                width="35px"
+              />
+            </LicenseNumberInput>
           </FormFieldWrapper>
         </FormRow>
       </FormSection>
@@ -438,3 +560,4 @@ export const CustomerRegisterPopup: React.FC<CustomerRegisterPopupProps> = ({ is
     </Popup>
   );
 }; 
+
