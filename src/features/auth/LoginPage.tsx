@@ -13,8 +13,31 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const validate = () => {
+    let valid = true;
+    if (!email) {
+      setEmailError('이메일을 입력해주세요.');
+      valid = false;
+    } else if (!/^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      setEmailError('올바른 이메일 형식이 아닙니다.');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+    if (!password) {
+      setPasswordError('비밀번호를 입력해주세요.');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+    return valid;
+  };
 
   const handleLogin = async () => {
+    if (!validate()) return;
     try {
       const response = await api.post('/api/v1/auth/login', {
         email,
@@ -28,18 +51,14 @@ const LoginPage = () => {
         localStorage.setItem('refreshToken', refreshToken);
         navigate('/');
       } else {
-        console.error('토큰이 없습니다.');
+        setEmailError('이메일과 비밀번호를 확인해주세요.');
+        setPasswordError('이메일과 비밀번호를 확인해주세요.');
       }
     } catch {
-      toast.error('이메일과 비밀번호를 확인해주세요');
+      setEmailError('이메일과 비밀번호를 확인해주세요.');
+      setPasswordError('이메일과 비밀번호를 확인해주세요.');
     }
   };
-
-  // TODO: axios 써서 Login API 호출하고
-  // 일치하면 dashboard 로 이동
-  // 틀리면 error message 노출
-  // 로그인 api 호출하고 -> header 값 가져와서 store or cookie 에 access token이랑 refresh token 저장
-  // 로그인 api는 axios
 
   return (
     <LoginContainer>
@@ -55,8 +74,9 @@ const LoginPage = () => {
           label="이메일"
           placeholder="이메일 주소 입력"
           value={email}
-          onChange={setEmail}
+          errorText={emailError}
           onEnter={handleLogin}
+          onChange={setEmail}
         />
         <TextInput
           width="100%"
@@ -64,6 +84,7 @@ const LoginPage = () => {
           id="password"
           label="비밀번호"
           value={password}
+          errorText={passwordError}
           placeholder="••••••••"
           onChange={setPassword}
           onEnter={handleLogin}
