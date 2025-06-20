@@ -63,6 +63,9 @@ export const useVehicleRegister = (): UseVehicleRegisterReturn => {
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = '차량 번호를 입력해주세요.';
       isValid = false;
+    } else if (!/^\d{2,3}[가-힣]{1}\d{4}$/.test(formData.registrationNumber)) {
+      newErrors.registrationNumber = '차량 번호 형식이 올바르지 않습니다.';
+      isValid = false;
     }
 
     // 연식 필드의 유효성 검사
