@@ -104,8 +104,15 @@ export const useVehicleList = (options?: UseVehicleListOptions): UseVehicleListR
           size: itemsPerPage,
         });
 
+        const convertList = response.list.map((item: VehicleSummary) => {
+          return {
+            ...item,
+            batteryVoltage: item.batteryVoltage ? `${item.batteryVoltage} kWh` : '',
+          };
+        });
+
         // 성공적으로 데이터를 불러오면 상태 업데이트
-        setVehicles(response.list);
+        setVehicles(convertList);
         setTotalCount(response.totalElements);
         setTotalPages(response.totalPages);
       } catch (err) {

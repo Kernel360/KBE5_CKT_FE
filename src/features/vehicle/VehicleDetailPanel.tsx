@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 // --- UI 컴포넌트 임포트 ---
@@ -10,6 +10,10 @@ import { Dropdown } from '@/components/ui/input/dropdown/Dropdown';
 import { Text } from '@/components/ui/text/Text';
 import { TextArea } from '@/components/ui/input/textarea/TextArea';
 
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
 // --- 스타일드 컴포넌트 임포트 ---
 import {
   PanelWrapper,
@@ -19,13 +23,22 @@ import {
   PanelLabelContainer,
   PanelValueContainer,
   AnimatedSection,
-  MapContainer,
+  MapWrap,
 } from '@/components/ui/modal/slide-panel/SlidePanel.styles';
 
 // --- 타입 및 훅 임포트 ---
 import { useConfirm } from '@/hooks/useConfirm';
 import { FUEL_TYPE_OPTIONS, TRANSMISSION_TYPE_OPTIONS } from './types';
 import { useDetailPanel } from './hooks/useVehicleDetail';
+
+const customIcon = new L.Icon({
+  iconUrl: '/icon/marker.svg',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
+const DEFAULT_ZOOM_LEVEL = 16;
 
 // --- VehicleDetailPanel 컴포넌트 props ---
 interface VehicleDetailPanelProps {
@@ -45,12 +58,14 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
   onSuccessSave,
 }) => {
   const { confirm } = useConfirm();
+  const mapRef = useRef<L.Map | null>(null);
 
   // -----------------------------------------------------------------------
   // 🚀 상세 패널 훅으로부터 상태 및 함수 가져오기
   // -----------------------------------------------------------------------
   const {
     selectedItem,
+    geoAddress,
     formData,
     errors,
     openPanel,
@@ -301,7 +316,7 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
           <Text type="subheading2">기술 정보</Text>
           {renderPanelRow(
             '배터리 전력',
-            selectedItem.batteryVoltage,
+            selectedItem.batteryVoltage + 'kWh',
             <TextInput
               id="batteryVoltage"
               value={formData.batteryVoltage ?? ''}
@@ -313,7 +328,7 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
           )}
           {renderPanelRow(
             '연료 유형',
-            selectedItem.fuelType,
+            selectedItem.fuelTypeName,
             <Dropdown
               id="fuelType"
               options={FUEL_TYPE_OPTIONS}
@@ -326,7 +341,7 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
           )}
           {renderPanelRow(
             '변속기',
-            selectedItem.transmissionType,
+            selectedItem.transmissionTypeName,
             <Dropdown
               id="transmissionType"
               options={TRANSMISSION_TYPE_OPTIONS}
@@ -343,13 +358,29 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
         <AnimatedSection $isVisible={!isEditMode} $maxHeight="500px" $duration="0.3s">
           <PanelSection>
             <Text type="subheading2">현재 위치</Text>
-            <MapContainer>지도</MapContainer>
+            {!!selectedItem.lat && !!selectedItem.lon ? (
+              <MapContainer
+                center={[selectedItem.lat, selectedItem.lon]}
+                zoom={DEFAULT_ZOOM_LEVEL}
+                style={{ width: '100%', height: '300px' }}
+                ref={mapRef}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker key={selectedItem.id} position={[selectedItem.lat, selectedItem.lon]} icon={customIcon} />
+              </MapContainer>
+            ) : (
+              <MapWrap>위치를 찾을 수 없습니다.</MapWrap>
+            )}
+
+            {geoAddress && <TextInput id="address" label="주소" value={geoAddress} disabled />}
           </PanelSection>
         </AnimatedSection>
 
         {/* --- 추가 정보 섹션 --- */}
         <PanelSection>
-          <Text type="subheading2">추가 정보</Text>
           <AnimatedSection $isVisible={isEditMode} $maxHeight="200px">
             <TextArea
               id="memo"

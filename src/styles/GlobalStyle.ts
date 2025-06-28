@@ -32,6 +32,8 @@ const GlobalStyle = createGlobalStyle`
 
       /* 최소 너비 설정 */
       min-width: 1280px;
+      width: 100%;
+      height: 100vh;
 
       /* 화면 너비가 min-width보다 작아질 경우 가로 스크롤바 생성 */
       overflow-x: auto;

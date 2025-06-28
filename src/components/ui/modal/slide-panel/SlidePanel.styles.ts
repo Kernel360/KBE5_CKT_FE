@@ -149,7 +149,7 @@ export const AnimatedSection = styled.div<PanelAnimatedContentProps>`
 `;
 
 // --- 7. 임시/플레이스홀더 컴포넌트 스타일 ---
-export const MapContainer = styled.div`
+export const MapWrap = styled.div`
   display: flex;
   width: 100%;
   height: 300px;
