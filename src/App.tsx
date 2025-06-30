@@ -18,7 +18,7 @@ import LoginPage from '@/features/auth/LoginPage';
 
 // 대시보드 페이지
 import RealtimeMonitoringPage from '@/features/monitoring/realtime-monitoring/RealtimeMonitoringPage';
-import DrivingLogPage from '@/features/monitoring/DrivingLogPage';
+import DrivingLogPage from '@/features/monitoring/driving-log/DrivingLogPage';
 import DrivingHistoryPage from '@/features/monitoring/DrivingHistoryPage';
 import CustomerListPage from '@/features/customer/CustomerListPage';
 import VehicleListPage from '@/features/vehicle/VehicleListPage';

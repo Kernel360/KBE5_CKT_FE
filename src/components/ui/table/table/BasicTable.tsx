@@ -65,8 +65,7 @@ const TableRow = <T extends object>({ data, tableHeaders, isLastRow, onRowClick 
             </div>
           );
         } else {
-          // 일반적인 텍스트 셀의 경우에도 displayKey가 있다면 우선 사용
-          cellContent = <DataSpan $preventWrap={tableHeader.preventWrap}>{String(valueForDisplay)}</DataSpan>;
+          cellContent = <DataSpan $preventWrap={tableHeader.preventWrap}>{String(valueForDisplay ?? '-')}</DataSpan>;
         }
 
         let flexGrow = 0;

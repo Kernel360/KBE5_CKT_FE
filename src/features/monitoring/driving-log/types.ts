@@ -7,9 +7,9 @@ export interface DrivingLogSummary {
   registrationNumber: string;
   startAt: Date;
   endAt: Date;
-  startOdometer: number;
-  endOdometer: number;
-  totalDistance: number;
+  startOdometer?: number | string;
+  endOdometer?: number | string;
+  totalDistance?: number | string;
   user: string;
   drivingType: string;
   drivingTypeName: string;
@@ -19,8 +19,8 @@ export interface DrivingLogSummary {
 
 export const DRIVINGLOG_TABLE_HEADERS: TableHeader<DrivingLogSummary>[] = [
   { label: '번호', key: 'id', width: '60px', align: 'center' },
-  { label: '모델', key: 'VehicleModelName', width: '9%', align: 'center' },
-  { label: '차량 번호', key: 'VehicleRegistrationNumber', width: '9%', align: 'center' },
+  { label: '모델', key: 'vehicleModelName', width: '9%', align: 'center' },
+  { label: '차량 번호', key: 'vehicleRegistrationNumber', width: '9%', align: 'center' },
   { label: '시작 시간', key: 'startAtFormatted', width: '12%', align: 'center' },
   { label: '종료 시간', key: 'endAtFormatted', width: '12%', align: 'center' },
   { label: '출발 계기판', key: 'startOdometer', width: '8%', align: 'center' },

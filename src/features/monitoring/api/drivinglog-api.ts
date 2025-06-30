@@ -6,7 +6,7 @@ import type {
   DrivingLogDetailResponse,
   DrivingLogUpdateRequest,
   DrivingLogUpdateResponse,
-} from '../types';
+} from '../driving-log/types';
 
 export const fetchDrivingLogs = async (params: DrivingLogListRequest): Promise<DrivingLogListResponse> => {
   const response = await api.get<CommonResponse<DrivingLogListResponse>>('/api/v1/logs/drive', {

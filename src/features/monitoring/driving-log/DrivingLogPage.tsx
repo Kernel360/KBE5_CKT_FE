@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { fetchDrivingLogs } from './api/drivinglog-api';
-import { formatLocalDateTime, startOfDay, endOfDay, formatDateTime } from '@/utils/date';
+import React, { useState, useEffect, useCallback } from 'react';
+import { fetchDrivingLogs } from '../api/drivinglog-api';
+import { formatDateTime } from '@/utils/date';
 
 import SearchIcon from '@/assets/icons/ic-search.svg?react';
 import {
@@ -19,6 +19,8 @@ import { BasicTable } from '@/components/ui/table/table/BasicTable';
 import { STATUS_OPTIONS, DRIVINGLOG_TABLE_HEADERS } from './types';
 import type { DrivingLogListRequest, DrivingLogSummary } from './types';
 import { DrivingLogDetailPanel } from './DrivingLogDetailPanel';
+import { Pagination } from '@/components/ui/table/pagination/Pagination';
+import { formatCommas } from '@/utils/common';
 
 const DrivingLogPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>({
@@ -32,12 +34,13 @@ const DrivingLogPage: React.FC = () => {
   const [drivingLogs, setDrivingLogs] = useState<DrivingLogSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [page, setPage] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [selectedDrivingLogId, setSelectedDrivingLogId] = useState<number | null>(null);
 
   // 운행 일지 목록 가져오기
-  const fetchDrivingLogsData = async () => {
+  const fetchDrivingLogsData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -45,10 +48,10 @@ const DrivingLogPage: React.FC = () => {
       const params: DrivingLogListRequest = {
         vehicleNumber: VehicleRegistrationNumber || undefined,
         userName: userName || undefined,
-        startDate: dateRange.startDate instanceof Date ? formatDateTime(startOfDay(dateRange.startDate)) : undefined,
-        endDate: dateRange.endDate instanceof Date ? formatDateTime(endOfDay(dateRange.endDate)) : undefined,
+        startDate: formatDateTime(dateRange.startDate, 'yyyyMMddHHmmss'),
+        endDate: formatDateTime(dateRange.endDate, 'yyyyMMddHHmmss'),
         type: status || undefined,
-        page: page,
+        page: page - 1,
         size: 10,
       };
 
@@ -56,35 +59,36 @@ const DrivingLogPage: React.FC = () => {
       const parsedData: DrivingLogSummary[] = data.list.map((item: DrivingLogSummary) => {
         return {
           ...item,
-          startAtFormatted: formatLocalDateTime(
-            item.startAt instanceof Date ? item.startAt.toISOString() : item.startAt
-          ),
-          endAtFormatted: formatLocalDateTime(item.endAt instanceof Date ? item.endAt.toISOString() : item.endAt),
-          drivingTypeName: item.statusName,
+          startOdometer: (formatCommas(item.startOdometer) ?? '0') + ' km',
+          endOdometer: (formatCommas(item.endOdometer) ?? '0') + ' km',
+          totalDistance: (formatCommas(item.totalDistance) ?? '0') + ' km',
+          startAtFormatted: formatDateTime(new Date(item.startAt)),
+          endAtFormatted: formatDateTime(new Date(item.endAt)),
         };
       });
       setDrivingLogs(parsedData);
+      setTotalPages(data.totalPages);
     } catch (err: any) {
       setError(err.message || '데이터를 가져오는 중 오류 발생');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, userName, VehicleRegistrationNumber, status, dateRange]);
 
-  // 검색 버튼 클릭 핸들러
-  // const handleSearchClick = () => {
-  //   fetchDrivingLogsData();
-  // };
+  // 페이지 변경 핸들러
+  const handlePageChange = useCallback((page: number) => {
+    setPage(page);
+  }, []);
 
   // TextInput 변경 핸들러
   const handleVehicleNumberChange = (value: string) => {
     setVehicleRegistrationNumber(value);
-    setPage(0);
+    setPage(1);
   };
 
   const handleUserNameChange = (value: string) => {
     setUserName(value);
-    setPage(0);
+    setPage(1);
   };
 
   const handleDateChange = (value: { startDate: Date | null; endDate: Date | null }) => {
@@ -105,10 +109,9 @@ const DrivingLogPage: React.FC = () => {
     setSelectedDrivingLogId(null);
   };
 
-  // 초기 데이터 로딩
   useEffect(() => {
     fetchDrivingLogsData();
-  }, [userName, VehicleRegistrationNumber, status, dateRange]);
+  }, [fetchDrivingLogsData]);
 
   return (
     <DashboardContainer>
@@ -158,6 +161,8 @@ const DrivingLogPage: React.FC = () => {
           onRowClick={handleRowClick}
           message={isLoading ? '로딩 중입니다...' : error || '데이터가 없습니다.'}
         ></BasicTable>
+
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} pageBlockSize={10} />
       </TableContainer>
 
       <DrivingLogDetailPanel
