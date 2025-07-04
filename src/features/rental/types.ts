@@ -89,17 +89,16 @@ export interface RentalUpdateFormErrors {
  * 예약 목록 테이블의 헤더 구성을 정의합니다.
  */
 export const RENTAL_TABLE_HEADERS: TableHeader<RentalSummary>[] = [
-  { label: '번호', key: 'id', width: '60px', align: 'center' },
-  { label: '고객명', key: 'customerName', width: '8%', align: 'center' },
-  { label: '고객 전화번호', key: 'customerPhoneNumber', width: '9%', align: 'center' },
-  { label: '차량 번호', key: 'vehicleRegistrationNumber', width: '9%', align: 'center' },
-  { label: '차량 모델명', key: 'vehicleModelName', width: '9%', align: 'center' },
-  { label: '제조사', key: 'vehicleManufacture', width: '8%', align: 'center' },
-  { label: '연식', key: 'vehicleModelYear', width: '6%', align: 'center' },
+  { label: '번호', key: 'id', width: '6%', align: 'center' },
+  { label: '고객명', key: 'customerName', width: '12%', align: 'center' },
+  { label: '고객 전화번호', key: 'customerPhoneNumber', width: '15%', align: 'center' },
+  { label: '차량 번호', key: 'vehicleRegistrationNumber', width: '15%', align: 'center' },
+  { label: '픽업 일시', key: 'pickupAt', width: '20%', align: 'center' },
+  { label: '반납 일시', key: 'returnAt', width: '20%', align: 'center' },
   {
     label: '예약 상태',
     key: 'rentalStatus',
-    width: '9%',
+    width: 'auto',
     type: 'badge',
     displayKey: 'rentalStatusName',
     valueToBadgeColorMap: {
@@ -109,9 +108,6 @@ export const RENTAL_TABLE_HEADERS: TableHeader<RentalSummary>[] = [
       CANCELED: 'red',
     },
   },
-  { label: '픽업 일시', key: 'pickupAt', width: '12%', align: 'center' },
-  { label: '반납 일시', key: 'returnAt', width: '12%', align: 'center' },
-  { label: '비고', key: 'memo', width: 'auto', align: 'left' },
 ];
 
 // --- 드롭다운 옵션 정의 ---

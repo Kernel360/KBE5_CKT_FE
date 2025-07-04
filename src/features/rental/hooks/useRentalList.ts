@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { RentalSummary } from '../types';
 import { fetchRentals } from '../api/rental-api';
 import { endOfDay, formatDateTime, formatLocalDateTime, startOfDay } from '@/utils/date';
+import { formatPhoneNumber } from '@/utils/common';
 
 // --- 인터페이스 정의 ---
 
@@ -143,6 +144,7 @@ export const useRentalList = (options?: UseRentalListOptions): UseRentalListResu
         pickupAt: formatLocalDateTime(item.pickupAt),
         returnAt: formatLocalDateTime(item.returnAt),
         memo: item.memo ?? '',
+        customerPhoneNumber: formatPhoneNumber(item.customerPhoneNumber),
       };
     });
   };
