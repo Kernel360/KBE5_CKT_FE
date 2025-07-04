@@ -5,34 +5,13 @@ import { useParams } from 'react-router-dom';
 
 import { getDrivingLogDetail } from '../api/drivinglog-api';
 import type { DrivingLogDetailResponse } from './types';
+import { getAddressFromCoord } from '@/utils/kakao';
+import type { LatLng } from '@/utils/kakao';
 
 import { formatLocalDateTime, getOnlyTime } from '@/utils/date';
 import { Text } from '@/components/ui/text/Text';
 import RouteMap from './components/RouteMap';
 import { formatCommas } from '@/utils/common';
-
-type LatLng = {
-  lat: number;
-  lon: number;
-};
-
-const getAddressFromCoord = async (lat: number, lon: number): Promise<string> => {
-  const url = `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lon}&y=${lat}`;
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `KakaoAK ${import.meta.env.VITE_KAKAO_MAP_REST_API_KEY}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('카카오 주소 변환 실패');
-  }
-
-  const data = await response.json();
-  const address = data.documents?.[0]?.address?.address_name;
-
-  return address;
-};
 
 const CoordinateToAddress: React.FC<LatLng> = ({ lat, lon }) => {
   const [address, setAddress] = useState('');

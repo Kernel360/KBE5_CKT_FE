@@ -191,9 +191,6 @@ const VehicleListPage: React.FC = () => {
             />
           </FilterContent>
           {/* 검색 버튼 */}
-          <IconButton icon={<SearchIcon />} onClick={handleSearchClick}>
-            검색
-          </IconButton>
         </FilterWrap>
       </FilterContainer>
 

@@ -10,10 +10,6 @@ import { Dropdown } from '@/components/ui/input/dropdown/Dropdown';
 import { Text } from '@/components/ui/text/Text';
 import { TextArea } from '@/components/ui/input/textarea/TextArea';
 
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
 // --- 스타일드 컴포넌트 임포트 ---
 import {
   PanelWrapper,
@@ -30,15 +26,59 @@ import {
 import { useConfirm } from '@/hooks/useConfirm';
 import { FUEL_TYPE_OPTIONS, TRANSMISSION_TYPE_OPTIONS } from './types';
 import { useDetailPanel } from './hooks/useVehicleDetail';
+import { getAddressFromCoord } from '@/utils/kakao';
+import type { LatLng } from '@/utils/kakao';
 
-const customIcon = new L.Icon({
-  iconUrl: '/icon/marker.svg',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
+const KakaoMapView = ({ lat, lon }: LatLng) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const DEFAULT_KAKAO_LEVEL = 5;
 
-const DEFAULT_ZOOM_LEVEL = 16;
+  useEffect(() => {
+    if (window.kakao && window.kakao.maps) {
+      const container = mapRef.current;
+
+      const options = {
+        center: new window.kakao.maps.LatLng(lat, lon),
+        level: DEFAULT_KAKAO_LEVEL,
+      };
+
+      const map = new window.kakao.maps.Map(container, options);
+
+      // 마커 추가
+      new window.kakao.maps.Marker({
+        map,
+        position: new window.kakao.maps.LatLng(lat, lon),
+        image: new window.kakao.maps.MarkerImage('/icon/marker.svg', new window.kakao.maps.Size(32, 32)),
+      });
+    }
+  }, [lat, lon]);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '300px', borderRadius: '5px' }} />;
+};
+
+const CoordinateToAddress: React.FC<LatLng> = ({ lat, lon }) => {
+  const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const addr = await getAddressFromCoord(lat, lon);
+
+        if (!addr) {
+          setAddress('좌표에 해당하는 주소가 없습니다.');
+        } else {
+          setAddress(addr);
+        }
+      } catch (err) {
+        console.error(err);
+        setAddress('주소를 불러올 수 없습니다.');
+      }
+    };
+    fetch();
+  }, [lat, lon]);
+
+  return <TextInput id="address" label="주소" value={address} disabled />;
+};
 
 // --- VehicleDetailPanel 컴포넌트 props ---
 interface VehicleDetailPanelProps {
@@ -375,23 +415,13 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
           <PanelSection>
             <Text type="subheading2">현재 위치</Text>
             {!!selectedItem.lat && !!selectedItem.lon ? (
-              <MapContainer
-                center={[selectedItem.lat, selectedItem.lon]}
-                zoom={DEFAULT_ZOOM_LEVEL}
-                style={{ width: '100%', height: '300px' }}
-                ref={mapRef}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker key={selectedItem.id} position={[selectedItem.lat, selectedItem.lon]} icon={customIcon} />
-              </MapContainer>
+              <>
+                <KakaoMapView lat={selectedItem.lat} lon={selectedItem.lon} />
+                <CoordinateToAddress lat={selectedItem.lat} lon={selectedItem.lon} />
+              </>
             ) : (
-              <MapWrap>위치를 찾을 수 없습니다.</MapWrap>
+              <MapWrap>현재 위치를 찾을 수 없습니다.</MapWrap>
             )}
-
-            {geoAddress && <TextInput id="address" label="주소" value={geoAddress} disabled />}
           </PanelSection>
         </AnimatedSection>
 
