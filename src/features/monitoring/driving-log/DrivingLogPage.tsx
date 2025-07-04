@@ -107,6 +107,7 @@ const DrivingLogPage: React.FC = () => {
               icon={<SearchIcon />}
               value={vehicleRegistrationNumber}
               onChange={handleVehicleNumberChange}
+              placeholder="차량번호 입력"
             />
 
             <DateInput
@@ -115,7 +116,7 @@ const DrivingLogPage: React.FC = () => {
               startDate={dateRange.startDate}
               endDate={dateRange.endDate}
               onDateChange={handleDateChange}
-              width="320px"
+              width="300px"
             />
           </FilterContent>
         </FilterWrap>

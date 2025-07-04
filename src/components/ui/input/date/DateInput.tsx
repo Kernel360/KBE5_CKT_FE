@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, forwardRef } from 'react';
 import DatePicker from 'react-datepicker';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale/ko';
@@ -7,6 +7,27 @@ import { StyledDateInputContainer, CalendarIconContainer, FieldContainer, Styled
 import type { DateInputProps } from './types';
 
 import CalendarIcon from '@/assets/icons/ic-calendar.svg?react';
+
+const CustomInput = forwardRef<HTMLDivElement, { value?: string; onClick?: () => void }>(({ value, onClick }, ref) => {
+  return (
+    <div
+      ref={ref}
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{ flexGrow: 1 }}>{value}</span>
+      <CalendarIconContainer>
+        <CalendarIcon />
+      </CalendarIconContainer>
+    </div>
+  );
+});
+CustomInput.displayName = 'CustomDateInput';
 
 export const DateInput: React.FC<DateInputProps> = ({
   id,
@@ -28,16 +49,6 @@ export const DateInput: React.FC<DateInputProps> = ({
     },
     [onDateChange]
   );
-
-  // 달력 팝업이 열릴 때 호출
-  const handleCalendarOpen = useCallback(() => {
-    setIsFocused(true);
-  }, []);
-
-  // 달력 팝업이 닫힐 때 호출
-  const handleCalendarClose = useCallback(() => {
-    setIsFocused(false);
-  }, []);
 
   const formatSelectedDates = () => {
     if (startDate && endDate) {
@@ -72,18 +83,15 @@ export const DateInput: React.FC<DateInputProps> = ({
           disabled={disabled}
           readOnly={readOnly}
           showPopperArrow={false}
-          onCalendarOpen={handleCalendarOpen}
-          onCalendarClose={handleCalendarClose}
+          onCalendarOpen={() => setIsFocused(true)}
+          onCalendarClose={() => setIsFocused(false)}
           className="react-datepicker-custom-input"
           locale={ko}
           showMonthDropdown
           showYearDropdown
           dropdownMode="select"
-          customInput={<span style={{ flexGrow: 1 }}>{formatSelectedDates()}</span>}
+          customInput={<CustomInput value={formatSelectedDates()} />}
         />
-        <CalendarIconContainer>
-          <CalendarIcon />
-        </CalendarIconContainer>
       </StyledDateInputContainer>
     </FieldContainer>
   );

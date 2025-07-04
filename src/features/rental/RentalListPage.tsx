@@ -175,7 +175,7 @@ const RentalListPage: React.FC = () => {
               onSelect={handleStatusSelect}
             />
             <DateInput
-              width="220px"
+              width="300px"
               id="date"
               label="기간 설정"
               startDate={filters.startAt}
