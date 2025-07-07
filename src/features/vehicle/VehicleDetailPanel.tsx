@@ -35,20 +35,19 @@ const KakaoMapView = ({ lat, lon }: LatLng) => {
 
   useEffect(() => {
     if (window.kakao && window.kakao.maps) {
-      const container = mapRef.current;
+      window.kakao.maps.load(() => {
+        if (!mapRef.current) return;
 
-      const options = {
-        center: new window.kakao.maps.LatLng(lat, lon),
-        level: DEFAULT_KAKAO_LEVEL,
-      };
+        const map = new window.kakao.maps.Map(mapRef.current, {
+          center: new window.kakao.maps.LatLng(lat, lon),
+          level: DEFAULT_KAKAO_LEVEL,
+        });
 
-      const map = new window.kakao.maps.Map(container, options);
-
-      // 마커 추가
-      new window.kakao.maps.Marker({
-        map,
-        position: new window.kakao.maps.LatLng(lat, lon),
-        image: new window.kakao.maps.MarkerImage('/icon/marker.svg', new window.kakao.maps.Size(32, 32)),
+        new window.kakao.maps.Marker({
+          map,
+          position: new window.kakao.maps.LatLng(lat, lon),
+          image: new window.kakao.maps.MarkerImage('/icon/marker.svg', new window.kakao.maps.Size(32, 32)),
+        });
       });
     }
   }, [lat, lon]);
