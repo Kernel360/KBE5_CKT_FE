@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchDrivingLogs } from '../api/drivinglog-api';
 import { formatDateTime } from '@/utils/date';
+import debounce from 'lodash.debounce';
 
 import SearchIcon from '@/assets/icons/ic-search.svg?react';
 import {
@@ -22,6 +23,8 @@ import { Pagination } from '@/components/ui/table/pagination/Pagination';
 import { formatCommas } from '@/utils/common';
 import { Text } from '@/components/ui/text/Text';
 
+const DEBOUNCE_DELAY = 400;
+
 const DrivingLogPage: React.FC = () => {
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>({
@@ -37,46 +40,60 @@ const DrivingLogPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   // 운행 일지 목록 가져오기
-  const fetchDrivingLogsData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError('');
+  const fetchDrivingLogsData = useCallback(
+    async (vehicleNumber?: string) => {
+      try {
+        setIsLoading(true);
+        setError('');
 
-      const params: DrivingLogListRequest = {
-        vehicleNumber: vehicleRegistrationNumber || undefined,
-        startDate: formatDateTime(dateRange.startDate, 'yyyyMMddHHmmss'),
-        endDate: formatDateTime(dateRange.endDate, 'yyyyMMddHHmmss'),
-        page: page - 1,
-        size: 10,
-      };
-
-      const data = await fetchDrivingLogs(params);
-      const parsedData: DrivingLogSummary[] = data.list.map((item: DrivingLogSummary) => {
-        return {
-          ...item,
-          totalDistance: (formatCommas(item.totalDistance) ?? '0') + ' km',
-          startAtFormatted: formatDateTime(new Date(item.startAt)),
-          endAtFormatted: formatDateTime(new Date(item.endAt)),
+        const params: DrivingLogListRequest = {
+          vehicleNumber: vehicleNumber || undefined,
+          startDate: formatDateTime(dateRange.startDate, 'yyyyMMddHHmmss'),
+          endDate: formatDateTime(dateRange.endDate, 'yyyyMMddHHmmss'),
+          page: page - 1,
+          size: 10,
         };
-      });
-      setDrivingLogs(parsedData);
-      setTotalPages(data.totalPages);
-    } catch (err: any) {
-      setError(err.message || '데이터를 가져오는 중 오류 발생');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, vehicleRegistrationNumber, dateRange]);
+
+        const data = await fetchDrivingLogs(params);
+        const parsedData: DrivingLogSummary[] = data.list.map((item: DrivingLogSummary) => {
+          return {
+            ...item,
+            totalDistance: (formatCommas(item.totalDistance) ?? '0') + ' km',
+            startAtFormatted: formatDateTime(new Date(item.startAt)),
+            endAtFormatted: formatDateTime(new Date(item.endAt)),
+          };
+        });
+        setDrivingLogs(parsedData);
+        setTotalPages(data.totalPages);
+      } catch (err: any) {
+        setError(err.message || '데이터를 가져오는 중 오류 발생');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [page, dateRange]
+  );
 
   // 페이지 변경 핸들러
   const handlePageChange = useCallback((page: number) => {
     setPage(page);
   }, []);
 
-  // TextInput 변경 핸들러
+  // 디바운스된 fetch 함수 (vehicleNumber만 반응)
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((value: string) => {
+        console.log(value);
+        fetchDrivingLogsData(value);
+      }, DEBOUNCE_DELAY),
+    [fetchDrivingLogsData]
+  );
+
+  // TextInput 변경 핸들러 (입력 시 디바운스 호출)
   const handleVehicleNumberChange = (value: string) => {
     setVehicleRegistrationNumber(value);
     setPage(1);
+    debouncedFetch(value);
   };
 
   const handleDateChange = (value: { startDate: Date | null; endDate: Date | null }) => {
@@ -87,9 +104,17 @@ const DrivingLogPage: React.FC = () => {
     navigate(`/driving-log/${rowData.id}`);
   };
 
+  // 날짜/페이지 변경은 즉시 호출
   useEffect(() => {
-    fetchDrivingLogsData();
-  }, [fetchDrivingLogsData]);
+    console.log(vehicleRegistrationNumber);
+    fetchDrivingLogsData(vehicleRegistrationNumber);
+  }, [dateRange, page]);
+
+  useEffect(() => {
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [debouncedFetch]);
 
   return (
     <DashboardContainer>
@@ -108,6 +133,7 @@ const DrivingLogPage: React.FC = () => {
               value={vehicleRegistrationNumber}
               onChange={handleVehicleNumberChange}
               placeholder="차량번호 입력"
+              maxLength={20}
             />
 
             <DateInput

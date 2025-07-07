@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { VehicleSummary } from '../types';
 import { fetchVehicles } from '../api/vehicle-api';
+import debounce from 'lodash.debounce';
 
 // --- 인터페이스 정의 ---
 
@@ -39,6 +40,7 @@ interface UseVehicleListResult {
 
 // --- 상수 정의 ---
 const DEFAULT_ITEMS_PER_PAGE = 10; // 기본 페이지당 항목 수
+const DEBOUNCE_DELAY = 400;
 
 // --- useVehicleList 커스텀 훅 정의 ---
 /**
@@ -64,15 +66,6 @@ export const useVehicleList = (options?: UseVehicleListOptions): UseVehicleListR
   const [error, setError] = useState<string | null>(null);
 
   // --- 콜백 함수 정의 ---
-
-  /**
-   * 필터 상태를 업데이트하고 페이지를 1로 리셋합니다.
-   * @param newFilters 새로 적용할 필터 객체 (부분 업데이트 가능)
-   */
-  const setFilters = useCallback((newFilters: UseVehicleListOptions) => {
-    setFiltersState(prevFilters => ({ ...prevFilters, ...newFilters }));
-    setCurrentPage(1);
-  }, []);
 
   /**
    * 현재 페이지를 설정합니다. (외부 노출용)
@@ -127,7 +120,48 @@ export const useVehicleList = (options?: UseVehicleListOptions): UseVehicleListR
         setIsLoading(false);
       }
     },
-    [filters, currentPage, itemsPerPage]
+    [currentPage, itemsPerPage]
+  );
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((keyword: string) => {
+        console.log(keyword);
+        refetch({ filters: { keyword }, page: 1 });
+      }, DEBOUNCE_DELAY),
+    [refetch]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [debouncedFetch]);
+
+  /**
+   * 필터 상태를 업데이트하고 페이지를 1로 리셋합니다.
+   * @param newFilters 새로 적용할 필터 객체 (부분 업데이트 가능)
+   */
+  const setFilters = useCallback(
+    (newFilters: UseVehicleListOptions) => {
+      setFiltersState(prevFilters => {
+        const merged = { ...prevFilters, ...newFilters };
+
+        if ('keyword' in newFilters) {
+          //keyword 필터 변경 → 디바운스 호출
+          debouncedFetch(newFilters.keyword || '');
+        } else {
+          //다른 필터 변경 → 즉시 refetch
+          refetch({ filters: merged, page: 1 });
+        }
+
+        return merged;
+      });
+
+      // 🔸 페이지를 1로 초기화
+      setCurrentPage(1);
+    },
+    [debouncedFetch, refetch]
   );
 
   // --- useEffect: 초기 데이터 로딩 시 데이터 재요청 ---

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import type { RentalSummary } from '../types';
 import { fetchRentals } from '../api/rental-api';
 import { endOfDay, formatDateTime, formatLocalDateTime, startOfDay } from '@/utils/date';
 import { formatPhoneNumber } from '@/utils/common';
+import debounce from 'lodash.debounce';
 
 // --- 인터페이스 정의 ---
 
@@ -43,6 +44,7 @@ interface UseRentalListResult {
 
 // --- 상수 정의 ---
 const DEFAULT_ITEMS_PER_PAGE = 10; // 기본 페이지당 항목 수
+const DEBOUNCE_DELAY = 400;
 
 // --- useRentaleList 커스텀 훅 정의 ---
 /**
@@ -70,15 +72,6 @@ export const useRentalList = (options?: UseRentalListOptions): UseRentalListResu
   const [error, setError] = useState<string | null>(null);
 
   // --- 콜백 함수 정의 ---
-
-  /**
-   * 필터 상태를 업데이트하고 페이지를 1로 리셋합니다.
-   * @param newFilters 새로 적용할 필터 객체 (부분 업데이트 가능)
-   */
-  const setFilters = useCallback((newFilters: UseRentalListOptions) => {
-    setFiltersState(prevFilters => ({ ...prevFilters, ...newFilters }));
-    setCurrentPage(1);
-  }, []);
 
   /**
    * 현재 페이지를 설정합니다. (외부 노출용)
@@ -129,7 +122,45 @@ export const useRentalList = (options?: UseRentalListOptions): UseRentalListResu
         setIsLoading(false);
       }
     },
-    [filters, currentPage, itemsPerPage]
+    [currentPage, itemsPerPage]
+  );
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((keyword: string) => {
+        console.log(keyword);
+        refetch({ filters: { keyword }, page: 1 });
+      }, DEBOUNCE_DELAY),
+    [refetch]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [debouncedFetch]);
+
+  /**
+   * 필터 상태를 업데이트하고 페이지를 1로 리셋합니다.
+   * @param newFilters 새로 적용할 필터 객체 (부분 업데이트 가능)
+   */
+  const setFilters = useCallback(
+    (newFilters: UseRentalListOptions) => {
+      setFiltersState(prevFilters => {
+        const merged = { ...prevFilters, ...newFilters };
+        if ('keyword' in newFilters) {
+          //keyword 필터 변경 → 디바운스 호출
+          debouncedFetch(newFilters.keyword || '');
+        } else {
+          //다른 필터 변경 → 즉시 refetch
+          refetch({ filters: merged, page: 1 });
+        }
+
+        return merged;
+      });
+      setCurrentPage(1);
+    },
+    [debouncedFetch, refetch]
   );
 
   // --- useEffect: 초기 데이터 로딩 시 데이터 재요청 ---

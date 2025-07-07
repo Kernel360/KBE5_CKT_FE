@@ -193,6 +193,7 @@ const RentalListPage: React.FC = () => {
               value={filters.keyword || ''}
               onChange={handleKeywordChange}
               onEnter={handleSearchClick}
+              maxLength={20}
             />
           </FilterContent>
         </FilterWrap>
