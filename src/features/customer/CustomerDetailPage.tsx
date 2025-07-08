@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/libs/axios';
@@ -56,26 +57,61 @@ const CustomerDetailPage: React.FC = () => {
 
     try {
       await api.delete(`/api/v1/customers/${id}`);
-      alert('삭제되었습니다.');
+      toast.success('삭제되었습니다.');
       navigate(-1);
     } catch (e) {
-      alert('삭제에 실패했습니다.');
+      toast.error('삭제에 실패했습니다.');
     }
   };
 
   const handleConfirm = async () => {
-    if (!form.email || !form.licenseNumber) {
-      alert('이메일과 운전면허번호는 필수입니다.');
+    if (!form.email?.trim()) {
+      toast.info('이메일은 필수 입력 항목입니다.');
       return;
+    }
+    const emailPattern = /^\S+@\S+\.\S+$/;
+    if (!emailPattern.test(form.email)) {
+      toast.error('유효한 이메일을 입력해주세요.');
+      return;
+    }
+    if (!form.licenseNumber?.trim()) {
+      toast.info('운전면허번호는 필수 입력 항목입니다.');
+      return;
+    }
+    // 생년월일 유효성 검사: 미래 날짜 차단 + 만 18세 이상만 등록 가능
+    if (form.birthday) {
+      const today = new Date();
+      const selectedDate = new Date(form.birthday);
+      const legalDate = new Date();
+      legalDate.setFullYear(today.getFullYear() - 18);
+      const todayStr = today.toISOString().split('T')[0];
+      if (form.birthday > todayStr) {
+        toast.error('생년월일은 오늘 이전 날짜여야 합니다.');
+        return;
+      }
+      if (selectedDate > legalDate) {
+        toast.error('운전면허 발급 가능한 생년월일이 아닙니다. 만 18세 이상만 등록 가능합니다.');
+        return;
+      }
     }
 
     try {
-      await api.put(`/api/v1/customers/${id}`, form);
-      alert('수정되었습니다.');
+      const response = await api.put(`/api/v1/customers/${id}`, form);
+      if (response.data.code !== '000') {
+        toast.error(response.data.message || '수정에 실패했습니다.');
+        return;
+      }
+      toast.success('수정되었습니다.');
       setCustomer(form);
       setIsEditMode(false);
-    } catch (e) {
-      alert('수정에 실패했습니다.');
+    } catch (e: any) {
+      const serverMessage = e.response?.data?.message;
+      if (serverMessage === '이미 등록된 면허번호입니다.') {
+        toast.error(serverMessage);
+      } else {
+        toast.error('수정에 실패했습니다.');
+      }
+      console.error('[UPDATE 에러]', e);
     }
   };
 
@@ -209,7 +245,9 @@ const CustomerDetailPage: React.FC = () => {
                     <span>
                       📅 {rentalInfo.currentRental.startDate} ~ {rentalInfo.currentRental.endDate}
                     </span>
-                    <RentalStatus>{rentalInfo.currentRental.status}</RentalStatus>
+                    <RentalStatus status={rentalInfo.currentRental.status}>
+                      {rentalInfo.currentRental.status}
+                    </RentalStatus>
                   </div>
                 </div>
               </RentalInfoRow>
@@ -254,9 +292,7 @@ const CustomerDetailPage: React.FC = () => {
                         <td>{item.startDate}</td>
                         <td>{item.endDate}</td>
                         <td>
-                          <RentalStatus status={item.status === '완료' ? 'done' : undefined}>
-                            {item.status}
-                          </RentalStatus>
+                          <RentalStatus status={item.status}>{item.status}</RentalStatus>
                         </td>
                       </tr>
                     ))
@@ -351,7 +387,16 @@ const CarIcon = styled.div`
 `;
 
 const RentalStatus = styled.span<{ status?: string }>`
-  background: ${({ status }) => (status === 'done' ? '#6366f1' : '#10b981')};
+  background: ${
+    ({ status }) =>
+      status === '예약 중'
+        ? '#10b981' // 초록
+        : status === '반납 완료'
+          ? '#6366f1' // 보라
+          : status === '예약 대기'
+            ? '#2563eb' // 파랑
+            : '#9ca3af' // 기타(회색)
+  };
   color: white;
   padding: 4px 12px;
   border-radius: 12px;

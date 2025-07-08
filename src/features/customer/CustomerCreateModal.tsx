@@ -2,12 +2,15 @@ import { BasicButton } from '@/components/ui/button/BasicButton';
 import api from '@/libs/axios';
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { toast } from 'react-toastify';
 
 interface Props {
   type: 'INDIVIDUAL' | 'CORPORATE';
   onClose: () => void;
   onSuccess: () => void;
 }
+
+const today = new Date().toISOString().split('T')[0];
 
 const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSuccess }) => {
   const [type, setType] = useState<'INDIVIDUAL' | 'CORPORATE'>(initialType);
@@ -47,9 +50,37 @@ const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSu
   };
 
   const handleSubmit = async () => {
-    if (!form.name.trim() || !form.license.trim()) {
-      alert('이름과 운전면허번호는 필수 입력 항목입니다.');
+    if (!form.name.trim() || !form.email.trim() || !form.license.trim()) {
+      toast.info('이름, 이메일, 운전면허번호는 필수 입력 항목입니다.');
       return;
+    }
+
+    const emailPattern = /^\S+@\S+\.\S+$/;
+    if (!form.email.trim() || !emailPattern.test(form.email)) {
+      toast.error('유효한 이메일을 입력해주세요.');
+      return;
+    }
+
+    if (type === 'INDIVIDUAL') {
+      const birthDate = new Date(form.birth);
+      const today = new Date();
+      const legalDate = new Date();
+      legalDate.setFullYear(today.getFullYear() - 18);
+
+      if (!form.birth) {
+        toast.error('생년월일을 입력해주세요.');
+        return;
+      }
+
+      if (birthDate > today) {
+        toast.error('생년월일은 오늘보다 이전이어야 합니다.');
+        return;
+      }
+
+      if (birthDate > legalDate) {
+        toast.error('운전면허 발급 가능한 생년월일이 아닙니다. 만 18세 이상만 등록 가능합니다.');
+        return;
+      }
     }
 
     try {
@@ -78,15 +109,18 @@ const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSu
               createdAt: form.joinDate,
             };
 
-      await api.post('/api/v1/customers', payload);
-
-      onSuccess(); // 리스트 새로고침
-
-      alert('사용자를 추가했습니다!');
+      const response = await api.post('/api/v1/customers', payload);
+      const { code, message } = response.data;
+      if (code !== '000') {
+        toast.error(message);
+        return;
+      }
+      onSuccess();
+      toast.success('사용자를 추가했습니다!');
       onClose();
-    } catch (err) {
-      alert('등록 중 오류가 발생했습니다.');
-      console.error(err);
+    } catch (err: any) {
+      console.error('[POST 에러]', err);
+      toast.error('등록 중 오류가 발생했습니다.');
     }
   };
 
@@ -134,7 +168,12 @@ const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSu
               </InputField>
               <InputField>
                 <Label>생년월일</Label>
-                <Input type="date" value={form.birth} onChange={e => handleChange('birth', e.target.value)} />
+                <Input
+                  type="date"
+                  value={form.birth}
+                  onChange={e => handleChange('birth', e.target.value)}
+                  max={today}
+                />
               </InputField>
               <InputField>
                 <Label>이메일</Label>
@@ -154,7 +193,12 @@ const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSu
               </InputField>
               <InputField>
                 <Label>가입일자</Label>
-                <Input type="date" value={form.joinDate} onChange={e => handleChange('joinDate', e.target.value)} />
+                <Input
+                  type="date"
+                  value={form.joinDate}
+                  onChange={e => handleChange('joinDate', e.target.value)}
+                  max={today}
+                />
               </InputField>
             </>
           ) : (
@@ -218,7 +262,12 @@ const CustomerCreateModal: React.FC<Props> = ({ type: initialType, onClose, onSu
               </InputField>
               <InputField>
                 <Label>가입일자</Label>
-                <Input type="date" value={form.joinDate} onChange={e => handleChange('joinDate', e.target.value)} />
+                <Input
+                  type="date"
+                  value={form.joinDate}
+                  onChange={e => handleChange('joinDate', e.target.value)}
+                  max={today}
+                />
               </InputField>
             </>
           )}
