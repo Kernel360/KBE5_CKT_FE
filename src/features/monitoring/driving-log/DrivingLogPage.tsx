@@ -20,8 +20,8 @@ import { BasicTable } from '@/components/ui/table/table/BasicTable';
 import { DRIVINGLOG_TABLE_HEADERS } from './types';
 import type { DrivingLogListRequest, DrivingLogSummary } from './types';
 import { Pagination } from '@/components/ui/table/pagination/Pagination';
-import { formatCommas } from '@/utils/common';
 import { Text } from '@/components/ui/text/Text';
+import { formatKm } from '@/utils/common';
 
 const DEBOUNCE_DELAY = 400;
 
@@ -55,10 +55,11 @@ const DrivingLogPage: React.FC = () => {
         };
 
         const data = await fetchDrivingLogs(params);
+        console.log(data);
         const parsedData: DrivingLogSummary[] = data.list.map((item: DrivingLogSummary) => {
           return {
             ...item,
-            totalDistance: (formatCommas(item.totalDistance) ?? '0') + ' km',
+            totalDistance: formatKm(Number(item.totalDistance)),
             startAtFormatted: formatDateTime(new Date(item.startAt)),
             endAtFormatted: formatDateTime(new Date(item.endAt)),
           };
@@ -83,7 +84,6 @@ const DrivingLogPage: React.FC = () => {
   const debouncedFetch = useMemo(
     () =>
       debounce((value: string) => {
-        console.log(value);
         fetchDrivingLogsData(value);
       }, DEBOUNCE_DELAY),
     [fetchDrivingLogsData]
@@ -106,7 +106,6 @@ const DrivingLogPage: React.FC = () => {
 
   // 날짜/페이지 변경은 즉시 호출
   useEffect(() => {
-    console.log(vehicleRegistrationNumber);
     fetchDrivingLogsData(vehicleRegistrationNumber);
   }, [dateRange, page]);
 

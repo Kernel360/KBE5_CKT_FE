@@ -16,7 +16,7 @@ import { IconButton } from '@/components/ui/button/IconButton';
 import { Dropdown } from '@/components/ui/input/dropdown/Dropdown';
 import { BasicTable } from '@/components/ui/table/table/BasicTable';
 import api from '@/libs/axios';
-import { formatCommas } from '@/utils/common';
+import { formatCommas, formatKm } from '@/utils/common';
 import { Text } from '@/components/ui/text/Text';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -62,13 +62,6 @@ const VEHICLE_LOG_TABLE_HEADERS = [
   { key: 'averageDistance', label: '평균 주행거리', width: '15%' },
   { key: 'averageDrivingTime', label: '평균 운행시간', width: '20%' },
   { key: 'drivingRate', label: '운행률', width: '15%' },
-];
-
-const WEEKLY_LOG_TABLE_HEADERS = [
-  { key: 'period', label: '운행 기간', width: '40%' },
-  { key: 'totalDistance', label: '총 운행거리', width: '20%' },
-  { key: 'totalTime', label: '총 운행시간', width: '20%' },
-  { key: 'daysCount', label: '운행 일수', width: '20%' },
 ];
 
 const StyledAnalysisWrapper = styled.div`
@@ -177,8 +170,8 @@ const DrivingHistoryPage: React.FC = () => {
             id: `${item.registrationNumber}-${Math.random()}`,
             vehicleNumber: item.registrationNumber || '-',
             drivingDays: item.drivingDays || 0,
-            totalDistance: (formatCommas(item.totalDistance || 0) ?? '0') + ' km',
-            averageDistance: (formatCommas(item.averageDistance ? Math.round(item.averageDistance) : 0) ?? '0') + ' km',
+            totalDistance: formatKm(Number(item.totalDistance) || 0),
+            averageDistance: formatKm(Math.round(item.averageDistance) || 0),
             averageDrivingTime: avgTime,
             drivingRate: calculateDrivingRate(item.drivingDays || 0, from.toISOString(), to.toISOString()),
           };
@@ -251,15 +244,6 @@ const DrivingHistoryPage: React.FC = () => {
     } catch (error) {
       toast.error('엑셀 다운로드에 실패했습니다.');
       console.error(error);
-    }
-  };
-
-  const handleWeeklySelect = (data: WeeklyLog) => {
-    setSelectedWeeklyData(data);
-    const weekStart = data.startDate;
-    const weekEnd = data.endDate;
-    if (weekStart && weekEnd) {
-      fetchDailyLogs(weekStart, weekEnd);
     }
   };
 

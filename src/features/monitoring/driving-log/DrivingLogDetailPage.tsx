@@ -11,7 +11,7 @@ import type { LatLng } from '@/utils/kakao';
 import { formatLocalDateTime, getOnlyTime } from '@/utils/date';
 import { Text } from '@/components/ui/text/Text';
 import RouteMap from './components/RouteMap';
-import { formatCommas } from '@/utils/common';
+import { formatKm } from '@/utils/common';
 
 const CoordinateToAddress: React.FC<LatLng> = ({ lat, lon }) => {
   const [address, setAddress] = useState('');
@@ -103,15 +103,15 @@ export const DrivingLogDetailPage: React.FC = () => {
             </ItemRow>
             <ItemRow>
               <Label>출발 계기판</Label>
-              <Value>{formatCommas(drivingLogResponse.startOdometer) + ' km'}</Value>
+              <Value>{formatKm(Number(drivingLogResponse.startOdometer))}</Value>
             </ItemRow>
             <ItemRow>
               <Label>도착 계기판</Label>
-              <Value>{formatCommas(drivingLogResponse.endOdometer) + ' km'}</Value>
+              <Value>{formatKm(Number(drivingLogResponse.endOdometer))}</Value>
             </ItemRow>
             <ItemRow>
               <Label>총 주행 거리</Label>
-              <Value>{formatCommas(drivingLogResponse.totalDistance)} km</Value>
+              <Value>{formatKm(Number(drivingLogResponse.totalDistance))}</Value>
             </ItemRow>
             <ItemRow>
               <Label>운전자 이름</Label>

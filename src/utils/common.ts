@@ -23,3 +23,8 @@ export const formatPhoneNumber = (phone: string): string => {
 
   return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
 };
+
+export const formatKm = (meter: number): string => {
+  const km = meter / 1000;
+  return (km % 1 === 0 ? km.toFixed(0) : km.toFixed(1)) + ' km';
+};
