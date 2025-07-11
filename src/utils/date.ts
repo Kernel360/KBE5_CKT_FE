@@ -84,3 +84,25 @@ export const getOnlyTime = (datetimeString: string): string => {
     return '';
   }
 };
+
+/**
+ * ISO 8601 날짜 문자열을 "yyyy.MM.dd" 형식으로 변환합니다.
+ * @param datetimeString - 변환할 날짜 문자열
+ * @returns 변환된 날짜 문자열 또는 빈 문자열
+ */
+export const formatDateOnly = (datetimeString: string | undefined): string => {
+  if (!datetimeString) {
+    return '';
+  }
+
+  try {
+    const date = parseISO(datetimeString);
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    return format(date, 'yyyy.MM.dd');
+  } catch (error) {
+    console.error('날짜 포매팅 오류:', error);
+    return '';
+  }
+};

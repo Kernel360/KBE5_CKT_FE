@@ -19,21 +19,7 @@ import { BasicButton } from '@/components/ui/button/BasicButton';
 import { Text } from '@/components/ui/text/Text';
 import { BasicTable } from '@/components/ui/table/table/BasicTable';
 import { Pagination } from '@/components/ui/table/pagination/Pagination';
-
-interface CustomerApiResponse {
-  id: number;
-  customerName: string;
-  phoneNumber: string;
-  licenseNumber: string;
-  zipCode: string;
-  address: string;
-  detailAddress: string;
-  birthday: string | null;
-  status: 'ACTIVE' | 'WITHDRAWN';
-  email: string;
-  createdAt: string;
-  customerType: 'INDIVIDUAL' | 'CORPORATE';
-}
+import { formatDateOnly } from '@/utils/date';
 
 interface CustomerTableData {
   id: number;
@@ -44,32 +30,10 @@ interface CustomerTableData {
   email: string;
   license: string;
   joinDate: string;
+  createdAt: string;
   status: '활성' | '비활성';
   type: 'INDIVIDUAL' | 'CORPORATE';
 }
-
-const statusMap: Record<string, CustomerTableData['status']> = {
-  ACTIVE: '활성',
-  WITHDRAWN: '비활성',
-};
-
-const statusApiMap = {
-  활성: 'ACTIVE',
-  비활성: 'WITHDRAWN',
-};
-
-const transformCustomerData = (data: CustomerApiResponse): CustomerTableData => ({
-  id: data.id,
-  name: data.customerName,
-  phone: data.phoneNumber,
-  birth: data.birthday || '-',
-  address: data.zipCode ? `${data.address} ${data.detailAddress} (${data.zipCode})` : '-',
-  email: data.email,
-  license: data.licenseNumber,
-  joinDate: data.createdAt.split('T')[0],
-  status: statusMap[data.status] ?? '비활성',
-  type: data.customerType,
-});
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -104,46 +68,58 @@ const TabButton = styled.button<{ selected: boolean }>`
   }
 `;
 
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 24px;
-`;
-
 const STATUS_OPTIONS = [
   { label: '전체', value: '전체' },
   { label: '활성', value: '활성' },
   { label: '비활성', value: '비활성' },
 ];
 
-const statusBadgeMap = {
-  활성: 'primary',
-  비활성: 'gray',
+const statusLabelMap = {
+  active: '활성',
+  withdrawn: '비활성',
+};
+
+const statusApiMap = {
+  활성: 'ACTIVE',
+  비활성: 'WITHDRAWN',
 };
 
 const personalTableHeaders = [
-  { label: '이름', key: 'name', width: '100px' },
-  { label: '연락처', key: 'phone', width: '130px' },
-  { label: '생년월일', key: 'birth', width: '110px' },
-  { label: '이메일', key: 'email', width: 'flex', minWidth: '180px' },
-  { label: '운전면허번호', key: 'license', width: '160px' },
-  { label: '가입일자', key: 'joinDate', width: '110px' },
-  { label: '회원 상태', key: 'status', width: '110px', type: 'badge', valueToBadgeColorMap: statusBadgeMap },
+  { label: '이름', key: 'customerName', width: '13%' },
+  { label: '연락처', key: 'phoneNumber', width: '15%' },
+  { label: '생년월일', key: 'birthday', width: '15%' },
+  { label: '이메일', key: 'email', width: '28%' },
+  { label: '가입일자', key: 'createdAtFormatted', width: '15%' },
+  {
+    label: '회원 상태',
+    key: 'status',
+    width: 'auto',
+    type: 'badge',
+    valueToBadgeColorMap: {
+      활성: 'green',
+      비활성: 'gray',
+    },
+  },
 ];
 
 const corporateTableHeaders = [
-  { label: '이름', key: 'name', width: '120px' },
-  { label: '연락처', key: 'phone', width: '130px' },
-  { label: '이메일', key: 'email', width: '200px' },
-  { label: '주소', key: 'address', width: 'flex', minWidth: '200px' },
-  { label: '운전면허번호', key: 'license', width: '160px' },
-  { label: '가입일자', key: 'joinDate', width: '110px' },
-  { label: '회원 상태', key: 'status', width: '110px', type: 'badge', valueToBadgeColorMap: statusBadgeMap },
+  { label: '이름', key: 'customerName', width: '10%' },
+  { label: '연락처', key: 'phoneNumber', width: '13%' },
+  { label: '이메일', key: 'email', width: '25%' },
+  { label: '주소', key: 'address', width: '30%' },
+  { label: '가입일자', key: 'createdAtFormatted', width: '12%' },
+  {
+    label: '회원 상태',
+    key: 'status',
+    width: 'auto',
+    type: 'badge',
+    valueToBadgeColorMap: {
+      활성: 'green',
+      비활성: 'gray',
+    },
+  },
 ];
 
-const ITEMS_PER_PAGE = 10;
 const DEBOUNCE_DELAY = 400;
 
 const CustomerListPage: React.FC = () => {
@@ -152,6 +128,7 @@ const CustomerListPage: React.FC = () => {
   const [type, setType] = useState<'INDIVIDUAL' | 'CORPORATE'>('INDIVIDUAL');
   const [filters, setFilters] = useState({ status: '전체', keyword: '' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [customers, setCustomers] = useState<CustomerTableData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -174,33 +151,40 @@ const CustomerListPage: React.FC = () => {
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    const statusParam = filters.status !== '전체' ? statusApiMap[filters.status as '활성' | '비활성'] : undefined;
+
     try {
       const response = await api.get('/api/v1/customers', {
         params: {
           sort: 'createdAt,DESC',
-          status: filters.status !== '전체' ? statusApiMap[filters.status as keyof typeof statusApiMap] : undefined,
+          type,
+          status: statusParam,
           keyword: filters.keyword || undefined,
+          page: currentPage - 1,
+          size: 10,
         },
       });
-      const customerList = response.data?.data?.list;
-      if (customerList && Array.isArray(customerList)) {
-        setCustomers(
-          customerList.map(transformCustomerData).map((data, idx) => ({
-            ...data,
-            index: customerList.length - idx,
-          }))
-        );
-        // setCustomers(customerList.map(transformCustomerData));
-      } else {
-        setCustomers([]);
-      }
+      const data = response.data?.data;
+
+      const formattedCustomers = (data?.list ?? []).map((customer: CustomerTableData) => ({
+        ...customer,
+        status: statusLabelMap[customer.status.toLowerCase() as keyof typeof statusLabelMap] || customer.status,
+        createdAtFormatted: formatDateOnly(customer.createdAt),
+      }));
+
+      setCustomers(formattedCustomers);
+      setTotalPages(data?.totalPages ?? 1);
     } catch (err) {
       setError(err as Error);
       setCustomers([]);
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, type, currentPage]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [filters.status]);
 
   useEffect(() => {
     fetchCustomers();
@@ -234,21 +218,6 @@ const CustomerListPage: React.FC = () => {
     setCurrentPage(p);
   }, []);
 
-  const filteredData = useMemo(() => {
-    const data = customers
-      .filter(c => c.type === type)
-      .filter(
-        c =>
-          (filters.status === '전체' || c.status === filters.status) &&
-          (filters.keyword === '' ||
-            c.name.includes(filters.keyword) ||
-            c.phone.includes(filters.keyword) ||
-            c.email.includes(filters.keyword))
-      );
-    return data;
-  }, [customers, type, filters]);
-
-  // filters.keyword가 바뀔 때만 디바운스로 fetch
   useEffect(() => {
     debouncedFetch();
   }, [filters.keyword]);
@@ -256,7 +225,6 @@ const CustomerListPage: React.FC = () => {
   const debouncedFetch = useMemo(
     () =>
       debounce(() => {
-        console.log(filters.keyword);
         fetchCustomers();
       }, DEBOUNCE_DELAY),
     [fetchCustomers]
@@ -268,8 +236,6 @@ const CustomerListPage: React.FC = () => {
     };
   }, [debouncedFetch]);
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const pagedData = filteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   const tableHeaders = type === 'INDIVIDUAL' ? personalTableHeaders : corporateTableHeaders;
 
   const tableMessage = isLoading
@@ -298,7 +264,7 @@ const CustomerListPage: React.FC = () => {
         <FilterWrap>
           <FilterContent>
             <Dropdown
-              width="120px"
+              width="250px"
               id="status"
               label="회원 상태"
               options={STATUS_OPTIONS}
@@ -306,7 +272,7 @@ const CustomerListPage: React.FC = () => {
               onSelect={handleStatusSelect}
             />
             <TextInput
-              width="220px"
+              width="250px"
               type="text"
               id="keyword-input"
               label="검색어"
@@ -335,22 +301,18 @@ const CustomerListPage: React.FC = () => {
         </TableHeaderRow>
         <BasicTable<CustomerTableData>
           tableHeaders={tableHeaders}
-          data={pagedData}
+          data={customers}
           message={tableMessage}
           onRowClick={row => {
             navigate(`/customers/${row.id}`);
           }}
         />
-        {totalPages > 1 && (
-          <PaginationContainer>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              pageBlockSize={10}
-            />
-          </PaginationContainer>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          pageBlockSize={10}
+        />
       </TableContainer>
       {isCreateModalOpen && (
         <CustomerCreateModal
