@@ -7,6 +7,7 @@ const OVERLAY_X_ANCHOR = 0.5;
 const OVERLAY_Y_ANCHOR = 1.5;
 const OVERLAY_Z_INDEX = 100;
 const FOCUSED_ZOOM_LEVEL = 3;
+const GPS_COORDINATE_SCALE = 1_000_000;
 
 import SearchIcon from '@/assets/icons/ic-search.svg?react';
 
@@ -25,6 +26,8 @@ import {
 import { Text } from '@/components/ui/text/Text';
 import VehicleCard from './VehicleCard';
 import api from '@/libs/axios';
+
+import { useSse } from './useSse';
 
 interface Vehicle {
   vehicleId: number;
@@ -51,6 +54,33 @@ const RealtimeMonitoringPage: React.FC = () => {
   const markersRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
   const clustererRef = useRef<any>(null);
+
+  const handleGpsUpdate = useCallback(data => {
+    const kakao = (window as any).kakao;
+    if (!kakao || !kakao.maps || !data?.mdn || !data?.lat || !data?.lon) return;
+
+    const lat = Number(data.lat) / GPS_COORDINATE_SCALE;
+    const lon = Number(data.lon) / GPS_COORDINATE_SCALE;
+
+    // 차량 번호(mdn) 기준으로 기존 마커 찾기
+    const existingMarker = markersRef.current.find(marker => marker.getTitle?.() === data.mdn);
+    if (existingMarker) {
+      existingMarker.setPosition(new kakao.maps.LatLng(lat, lon));
+    } else {
+      const newMarker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(lat, lon),
+        title: data.mdn,
+        image: new kakao.maps.MarkerImage('/icon/marker.svg', new kakao.maps.Size(32, 32), {
+          offset: new kakao.maps.Point(16, 32),
+        }),
+        map: kakaoMapRef.current,
+      });
+      markersRef.current.push(newMarker);
+    }
+  }, []);
+
+  // useSse 훅을 사용하여 SSE 연결 관리
+  useSse('gps-update', handleGpsUpdate);
 
   const filterVehicles = useCallback(
     (value: string) => {
@@ -139,7 +169,11 @@ const RealtimeMonitoringPage: React.FC = () => {
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
     if (infoWindowRef.current) {
-      infoWindowRef.current.setMap(null);
+      if (typeof infoWindowRef.current.close === 'function') {
+        infoWindowRef.current.close();
+      } else if (typeof infoWindowRef.current.setMap === 'function') {
+        infoWindowRef.current.setMap(null);
+      }
       infoWindowRef.current = null;
     }
     const kakao = (window as any).kakao;

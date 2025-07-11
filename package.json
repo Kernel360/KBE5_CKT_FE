@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.1.1",
     "axios": "^1.9.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
@@ -27,6 +28,7 @@
     "react-remove-scroll": "^2.7.1",
     "react-router-dom": "^6.30.1",
     "react-toastify": "^11.0.5",
+    "sockjs-client": "^1.6.1",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
