@@ -97,23 +97,11 @@ export interface VehicleUpdateFormErrors {
  * 차량 목록 테이블의 헤더 구성을 정의합니다.
  */
 export const VEHICLE_TABLE_HEADERS: TableHeader<VehicleSummary>[] = [
-  { label: '차량 번호', key: 'registrationNumber', width: '15%', align: 'center' },
-  { label: '제조사', key: 'manufacturer', width: '15%', align: 'center' },
-  { label: '모델', key: 'modelName', width: '15%', align: 'center' },
-  { label: '연식', key: 'modelYear', width: '8%', align: 'center' },
-  { label: '연료 타입', key: 'fuelTypeName', width: '12%', align: 'center' },
-  {
-    label: '상태',
-    key: 'status',
-    width: '10%',
-    type: 'badge',
-    displayKey: 'statusName',
-    valueToBadgeColorMap: {
-      AVAILABLE: 'green',
-      RENTED: 'red',
-      INACTIVE: 'gray',
-    },
-  },
+  { label: '차량 번호', key: 'registrationNumber', width: '17%', align: 'center' },
+  { label: '제조사', key: 'manufacturer', width: '17%', align: 'center' },
+  { label: '모델', key: 'modelName', width: '17%', align: 'center' },
+  { label: '연식', key: 'modelYear', width: '10%', align: 'center' },
+  { label: '연료 타입', key: 'fuelTypeName', width: '14%', align: 'center' },
   { label: '특이사항', key: 'memo', width: 'auto', align: 'left' },
 ];
 
