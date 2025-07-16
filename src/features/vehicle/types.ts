@@ -50,7 +50,6 @@ export interface UseVehicleRegisterReturn {
  */
 export interface UseDetailPanelReturn {
   selectedItem: Vehicle | null;
-  geoAddress: string | null;
   formData: VehicleUpdateFormData;
   errors: VehicleUpdateFormErrors;
   openPanel: (id: number) => void;

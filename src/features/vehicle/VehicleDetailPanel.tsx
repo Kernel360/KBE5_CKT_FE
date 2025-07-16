@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 // --- UI 컴포넌트 임포트 ---
 import { SlidePanel } from '@/components/ui/modal/slide-panel/SlidePanel';
 import { BasicButton } from '@/components/ui/button/BasicButton';
-import { Badge } from '@/components/ui/badge/Badge';
 import { TextInput } from '@/components/ui/input/input/TextInput';
 import { Dropdown } from '@/components/ui/input/dropdown/Dropdown';
 import { Text } from '@/components/ui/text/Text';
@@ -97,14 +96,12 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
   onSuccessSave,
 }) => {
   const { confirm } = useConfirm();
-  const mapRef = useRef<L.Map | null>(null);
 
   // -----------------------------------------------------------------------
   // 🚀 상세 패널 훅으로부터 상태 및 함수 가져오기
   // -----------------------------------------------------------------------
   const {
     selectedItem,
-    geoAddress,
     formData,
     errors,
     openPanel,
@@ -222,22 +219,6 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
     onClose();
   }, [onClose]);
 
-  /**
-   * 차량 상태에 따른 배지 색상을 반환합니다.
-   */
-  const getBadgeColor = useCallback((status: string): string => {
-    switch (status) {
-      case 'AVAILABLE':
-        return 'green';
-      case 'IN_USE':
-        return 'blue';
-      case 'NEEDS_MAINTENANCE':
-        return 'red';
-      default:
-        return 'gray';
-    }
-  }, []);
-
   // --- 패널 하단 액션 버튼 렌더링 (메모이제이션) ---
   const panelActions = useMemo(() => {
     if (isLoadingDetail || !selectedItem) {
@@ -321,7 +302,6 @@ export const VehicleDetailPanel: React.FC<VehicleDetailPanelProps> = ({
         <PanelSection>
           <PanelRowSection>
             <Text type="subheading">{selectedItem.registrationNumber}</Text>
-            <Badge $badgeColor={getBadgeColor(selectedItem.status)}>{selectedItem.statusName}</Badge>
           </PanelRowSection>
         </PanelSection>
 

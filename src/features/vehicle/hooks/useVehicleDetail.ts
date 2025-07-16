@@ -17,7 +17,6 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [selectedItem, setSelectedItem] = useState<Vehicle | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-  const [geoAddress, setGeoAddress] = useState<string | null>(null);
 
   const { showLoading, hideLoading } = useLoading();
 
@@ -59,7 +58,6 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
     const fetchDetail = async () => {
       if (selectedItemId === null) {
         setSelectedItem(null);
-        setGeoAddress(null);
         return;
       }
 
@@ -68,10 +66,6 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
       try {
         const data = await getVehicleDetail(selectedItemId);
         setSelectedItem(data);
-
-        if (!!data.lat && !!data.lon) {
-          getGeoCoding(data.lat, data.lon);
-        }
       } catch (error) {
         console.error('차량 상세 조회 실패:', error);
 
@@ -266,61 +260,8 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
     setErrors({});
   }, []);
 
-  const getGeoCoding = async (lat: number, lon: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=ko`
-      );
-      const data = await response.json();
-      const address = data.address;
-
-      const parts: string[] = [];
-
-      // 시/도: province > city > state 순으로 확인
-      const cityOrProvinceOrState = address.province?.trim() ?? address.city?.trim() ?? address.state?.trim();
-      if (cityOrProvinceOrState) {
-        parts.push(cityOrProvinceOrState);
-      }
-
-      // 시/군/구: borough > city_district > county > town > municipality 순으로 확인
-      const districtOrCounty =
-        address.borough?.trim() ??
-        address.city_district?.trim() ??
-        address.county?.trim() ??
-        address.town?.trim() ??
-        address.municipality?.trim();
-
-      // 시/도와 시/군/구 중복 방지
-      if (districtOrCounty && parts[0] !== districtOrCounty) {
-        parts.push(districtOrCounty);
-      }
-
-      // 도로명 및 건물 번호
-      let roadPart = address.road?.trim() ?? '';
-      if (address.house_number) {
-        roadPart += ` ${address.house_number.trim()}`;
-      }
-      if (roadPart) {
-        parts.push(roadPart);
-      }
-
-      // 상세 주소 (동/읍/면): quarter > suburb > village > hamlet 순으로 확인 (괄호로 묶음)
-      const subLocality =
-        address.quarter?.trim() ?? address.suburb?.trim() ?? address.village?.trim() ?? address.hamlet?.trim();
-      if (subLocality) {
-        parts.push(`(${subLocality})`);
-      }
-
-      setGeoAddress(parts.join(' ').trim());
-    } catch (error: unknown) {
-      console.error('역지오코딩 실패:', error);
-      setGeoAddress(null);
-    }
-  };
-
   return {
     selectedItem,
-    geoAddress,
     formData,
     errors,
     openPanel,
