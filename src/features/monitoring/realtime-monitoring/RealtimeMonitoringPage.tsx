@@ -114,7 +114,6 @@ const RealtimeMonitoringPage: React.FC = () => {
           stolen: status.stolen,
           stopped: status.total - runningCount - status.stolen,
         });
-
       } else {
         setVehicles([]);
       }
@@ -292,7 +291,7 @@ const RealtimeMonitoringPage: React.FC = () => {
       <HeaderContainer>
         <StatCard label="전체 차량" count={status.total} unit="대" unitColor="blue" />
         <StatCard label="운행중 차량" count={status.running} unit="대" unitColor="green" />
-        <StatCard label="도난 차량" count={status.stolen} unit="대" unitColor="red" />
+        <StatCard label="미예약 차량" count={status.stolen} unit="대" unitColor="red" />
         <StatCard label="미운행 차량" count={status.stopped} unit="대" unitColor="yellow" />
       </HeaderContainer>
 
