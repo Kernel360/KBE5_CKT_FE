@@ -273,6 +273,8 @@ export interface UpdateRentalStatusResponse {
   id: number;
   rentalStatus: string;
   rentalStatusName: string;
+  pickupAt: string;
+  returnAt: string;
 }
 
 /**

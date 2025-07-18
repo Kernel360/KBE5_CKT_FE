@@ -51,7 +51,6 @@ export function useSse(eventName: string, onMessage: (data: any) => void) {
       sharedEventSource?.removeEventListener(eventName, handler);
 
       if (eventListeners.size === 0 && sharedEventSource) {
-        console.log('All listeners removed, closing SHARED SSE connection.');
         sharedEventSource.close();
         sharedEventSource = null;
       }

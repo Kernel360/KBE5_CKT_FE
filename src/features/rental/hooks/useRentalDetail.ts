@@ -16,6 +16,7 @@ import {
   type UseDetailPanelReturn,
 } from '../types';
 import { getRentalDetail, updateRental, updateRentalMemo, updateRentalStatus } from '../api/rental-api';
+import { useConfirm } from '@/hooks/useConfirm';
 
 /**
  * 예약 상세 정보 패널의 데이터 로딩, 상태 관리, 수정 및 삭제 로직을 관리하는 훅입니다.
@@ -27,6 +28,7 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   const { showLoading, hideLoading } = useLoading();
+  const { confirm } = useConfirm();
 
   // --- 폼 데이터 상태 관리 ---
   // 예약 수정 폼의 모든 입력 필드 값을 저장합니다. 초기값은 빈 문자열입니다.
@@ -281,6 +283,23 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
         return false;
       }
 
+      if (status === RENTAL_STATUS_RENTED || status === RENTAL_STATUS_RETURNED) {
+        const title = status === RENTAL_STATUS_RENTED ? '예약 안내' : '반납 안내';
+        const content =
+          status === RENTAL_STATUS_RENTED ? '현재 시간으로 차량을 픽업합니다.' : '현재 시간으로 차량을 반납합니다.';
+
+        const isConfirmed = await confirm({
+          title,
+          content,
+          confirmText: '확인',
+          cancelText: '취소',
+        });
+
+        if (!isConfirmed) {
+          return false;
+        }
+      }
+
       showLoading();
       try {
         const requestData = {
@@ -288,7 +307,6 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
         };
 
         const response = await updateRentalStatus(selectedItemId, requestData);
-        console.log('response > ', response);
 
         setSelectedItem(prev => {
           if (prev) {
@@ -296,6 +314,8 @@ export const useDetailPanel = (): UseDetailPanelReturn => {
               ...prev,
               rentalStatus: response.rentalStatus,
               rentalStatusName: response.rentalStatusName,
+              pickupAt: response.pickupAt,
+              returnAt: response.returnAt,
             };
           }
           return prev;
